@@ -1,4 +1,4 @@
-const CACHE = "star-day-2026-08-09T04-45-56-996Z";
+const CACHE = "star-day-2026-08-09T05-09-06-609Z";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

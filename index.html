@@ -168,6 +168,9 @@
   .usualbtn:hover { background: var(--green-soft); }
   .addrow { display: flex; gap: 8px; margin-top: 10px; }
   .addrow select { flex: 1; min-width: 0; }
+  .gadd { width: 92px; flex: none; }
+  .gin { width: 72px; padding: 5px 8px; }
+  .gunit { font-size: 12px; color: var(--muted); }
   .addrow button { border: 1px solid var(--green); background: var(--green); color: #fff; border-radius: 10px; padding: 7px 14px; font-weight: 600; }
   .mealtotal { display: flex; justify-content: space-between; margin-top: 9px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; gap: 4px; }
   .mealtotal b { color: var(--ink); font-weight: 600; }
@@ -315,6 +318,7 @@
         <div><label>Carbs (g)</label><input id="cf-c" type="number" inputmode="decimal"></div>
         <div><label>Fiber (g)</label><input id="cf-fib" type="number" inputmode="decimal"></div>
         <div><label>Veg (oz) it contains</label><input id="cf-veg" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="full"><label>Serving weight in grams — fill this in to enable ⚖ weigh mode (tare your bowl, type what the scale says)</label><input id="cf-servg" type="number" inputmode="decimal" placeholder="e.g. 240"></div>
         <div class="full"><label>Shows up in</label>
           <div class="groupchecks" id="cf-groups"></div>
         </div>
@@ -361,8 +365,8 @@ function seedComponents(){ return [
   {id:'egg',       name:'Egg',                      serving:'1 large',            cal:70,  p:6,   f:5,  c:0.5, fib:0,  veg:0,   groups:['breakfast']},
   {id:'eggwhites', name:'Egg whites',               serving:'¼ cup (≈2 whites)',  cal:35,  p:7,   f:0,  c:1,   fib:0,  veg:0,   groups:['breakfast']},
   {id:'scramble2', name:'2-Egg Scramble',           serving:'2 eggs + veg + kraut',cal:220, p:12,  f:9,  c:5,   fib:1,  veg:3,   groups:['breakfast']},
-  {id:'kraut',     name:'Sauerkraut',               serving:'½ cup',              cal:20,  p:1,   f:0,  c:4,   fib:2,  veg:2.5, groups:['breakfast','adds']},
-  {id:'sautveg',   name:'Sautéed veg (no oil)',     serving:'1 cup',              cal:50,  p:2,   f:0,  c:10,  fib:3,  veg:4,   groups:['breakfast','adds']},
+  {id:'kraut',     name:'Sauerkraut',               serving:'½ cup',              cal:20,  p:1,   f:0,  c:4,   fib:2,  veg:2.5, servG:71,  groups:['breakfast','adds']},
+  {id:'sautveg',   name:'Sautéed veg (no oil)',     serving:'1 cup',              cal:50,  p:2,   f:0,  c:10,  fib:3,  veg:4,   servG:120, groups:['breakfast','adds']},
   {id:'nooch',     name:'Nutritional yeast',        serving:'2 tbsp',             cal:60,  p:8,   f:1,  c:5,   fib:3,  veg:0,   groups:['breakfast','adds']},
   {id:'greekyog',  name:'Greek yogurt, plain nonfat',serving:'170 g cup',         cal:90,  p:16,  f:0,  c:6,   fib:0,  veg:0,   groups:['breakfast','snacks']},
   {id:'shake',     name:'Full Protein Shake',       serving:'your usual recipe',  cal:522, p:38,  f:21, c:44,  fib:6,  veg:1,   groups:['lunch']},
@@ -373,21 +377,22 @@ function seedComponents(){ return [
   {id:'hemp',      name:'Hemp hearts',              serving:'1 tbsp',             cal:55,  p:3,   f:4,  c:1,   fib:0.5,veg:0,   groups:['lunch']},
   {id:'soymilk',   name:'Soy milk, unsweetened',    serving:'1 cup',              cal:100, p:7,   f:4,  c:8,   fib:1,  veg:0,   groups:['lunch']},
   {id:'spinach',   name:'Spinach',                  serving:'1 cup',              cal:7,   p:1,   f:0,  c:1,   fib:1,  veg:1,   groups:['lunch','adds']},
-  {id:'dal',       name:'Dal',                      serving:'1 cup',              cal:230, p:14,  f:4,  c:36,  fib:8,  veg:0,   groups:['legume']},
-  {id:'chana',     name:'Chana Masala',             serving:'1–1¼ cup',           cal:215, p:9,   f:7,  c:26,  fib:7,  veg:0,   groups:['legume']},
-  {id:'mexbeans',  name:'Mexican Beans',            serving:'1 cup',              cal:275, p:15,  f:5,  c:45,  fib:11, veg:0,   groups:['legume']},
-  {id:'edamame',   name:'Edamame',                  serving:'¾ cup dry-roasted',  cal:150, p:13.5,f:5,  c:11,  fib:5,  veg:0,   groups:['legume','snacks']},
-  {id:'tofu',      name:'Baked Tofu',               serving:'5–6 oz',             cal:215, p:23,  f:13, c:4,   fib:1,  veg:0,   groups:['protein']},
-  {id:'tempeh',    name:'Tempeh',                   serving:'6 oz',               cal:340, p:34,  f:18, c:15,  fib:9,  veg:0,   groups:['protein']},
-  {id:'soycurls',  name:'Soy Curls',                serving:'1 cup rehydrated',   cal:200, p:22,  f:6,  c:14,  fib:4,  veg:0,   groups:['protein']},
-  {id:'soychorizo',name:'Soy Chorizo',              serving:'2.5 oz',             cal:160, p:10,  f:11, c:8,   fib:0,  veg:0,   groups:['protein']},
-  {id:'potato',    name:'Boiled Potato',            serving:'1 medium',           cal:130, p:3,   f:0,  c:30,  fib:3,  veg:0,   groups:['starch']},
-  {id:'sweetpot',  name:'Sweet Potato',             serving:'1 medium',           cal:105, p:2,   f:0,  c:24,  fib:4,  veg:0,   groups:['starch']},
-  {id:'rice',      name:'Cooked Rice',              serving:'¾ cup',              cal:155, p:3,   f:0,  c:33,  fib:1,  veg:0,   groups:['starch']},
-  {id:'roastveg',  name:'Roasted Veg / Salad',      serving:'1–1.5 cup',          cal:90,  p:3,   f:3,  c:12,  fib:4,  veg:6,   groups:['adds']},
-  {id:'frozveg',   name:'Frozen veg, steamed',      serving:'1.5 cup',            cal:80,  p:4,   f:0,  c:14,  fib:5,  veg:7,   groups:['adds']},
-  {id:'tzatziki',  name:'Tzatziki',                 serving:'⅓ cup',              cal:100, p:5,   f:8,  c:3,   fib:0,  veg:0,   groups:['adds']},
+  {id:'dal',       name:'Dal',                      serving:'1 cup',              cal:230, p:14,  f:4,  c:36,  fib:8,  veg:0,   servG:240, groups:['legume']},
+  {id:'chana',     name:'Chana Masala',             serving:'1–1¼ cup',           cal:215, p:9,   f:7,  c:26,  fib:7,  veg:0,   servG:280, groups:['legume']},
+  {id:'mexbeans',  name:'Mexican Beans',            serving:'1 cup',              cal:275, p:15,  f:5,  c:45,  fib:11, veg:0,   servG:260, groups:['legume']},
+  {id:'edamame',   name:'Edamame',                  serving:'¾ cup shelled',      cal:150, p:13.5,f:5,  c:11,  fib:5,  veg:0,   servG:115, groups:['legume','snacks']},
+  {id:'tofu',      name:'Baked Tofu',               serving:'5–6 oz',             cal:215, p:23,  f:13, c:4,   fib:1,  veg:0,   servG:155, groups:['protein']},
+  {id:'tempeh',    name:'Tempeh',                   serving:'6 oz',               cal:340, p:34,  f:18, c:15,  fib:9,  veg:0,   servG:170, groups:['protein']},
+  {id:'soycurls',  name:'Soy Curls',                serving:'1 cup rehydrated',   cal:200, p:22,  f:6,  c:14,  fib:4,  veg:0,   servG:130, groups:['protein']},
+  {id:'soychorizo',name:'Soy Chorizo',              serving:'2.5 oz',             cal:160, p:10,  f:11, c:8,   fib:0,  veg:0,   servG:71,  groups:['protein']},
+  {id:'potato',    name:'Boiled Potato',            serving:'1 medium',           cal:130, p:3,   f:0,  c:30,  fib:3,  veg:0,   servG:150, groups:['starch']},
+  {id:'sweetpot',  name:'Sweet Potato',             serving:'1 medium',           cal:105, p:2,   f:0,  c:24,  fib:4,  veg:0,   servG:130, groups:['starch']},
+  {id:'rice',      name:'Cooked Rice',              serving:'¾ cup',              cal:155, p:3,   f:0,  c:33,  fib:1,  veg:0,   servG:140, groups:['starch']},
+  {id:'roastveg',  name:'Roasted Veg / Salad',      serving:'1–1.5 cup',          cal:90,  p:3,   f:3,  c:12,  fib:4,  veg:6,   servG:170, groups:['adds']},
+  {id:'frozveg',   name:'Frozen veg, steamed',      serving:'1.5 cup',            cal:80,  p:4,   f:0,  c:14,  fib:5,  veg:7,   servG:200, groups:['adds']},
+  {id:'tzatziki',  name:'Tzatziki',                 serving:'⅓ cup',              cal:100, p:5,   f:8,  c:3,   fib:0,  veg:0,   servG:80,  groups:['adds']},
   {id:'hbegg',     name:'Hard-Boiled Egg',          serving:'1 egg',              cal:70,  p:6,   f:5,  c:0.5, fib:0,  veg:0,   groups:['snacks']},
+  {id:'hummus',    name:'Hummus',                   serving:'2 tbsp (30 g)',      cal:70,  p:2,   f:5,  c:4,   fib:1.5,veg:0,   servG:30,  groups:['snacks','adds']},
   {id:'hummusveg', name:'Hummus + Veg',             serving:'2 tbsp + veg',       cal:100, p:4,   f:6,  c:10,  fib:3,  veg:3,   groups:['snacks']},
   {id:'chiapud',   name:'Chia Pudding',             serving:'your usual recipe',  cal:540, p:26,  f:35, c:34,  fib:15, veg:0,   groups:['snacks','breakfast']}
 ];}
@@ -412,6 +417,14 @@ function load(){
       protein: (t.protein === 110 ? 100 : t.protein) || 100,
       veg: t.veg || 16
     }};
+    // migrate to v2.1 weigh mode: add serving weights to existing components,
+    // and insert components new in v2.1 (deletions she made stay deleted)
+    const NEW_IN_V21 = ['hummus'];
+    for(const seed of seedComponents()){
+      const mine = s.components.find(c=>c.id===seed.id);
+      if(!mine){ if(NEW_IN_V21.includes(seed.id)) s.components.push(seed); }
+      else if(seed.servG && !mine.servG) mine.servG = seed.servG;
+    }
     return s;
   } catch(e){ return defaultState(); }
 }
@@ -436,11 +449,16 @@ function lastLogged(mkey){
 }
 
 /* ───────────────────────── math ───────────────────────── */
+function itemFactor(it, c){
+  // weighed item: grams ÷ grams-per-serving; counted item: number of servings
+  return (it.g != null && c.servG) ? it.g / c.servG : (it.qty || 0);
+}
 function mealTotals(d, meal){
   const t = {cal:0,p:0,f:0,c:0,fib:0,veg:0};
   for(const it of d.meals[meal]||[]){
     const c = comp(it.cid); if(!c) continue;
-    t.cal+=c.cal*it.qty; t.p+=c.p*it.qty; t.f+=c.f*it.qty; t.c+=c.c*it.qty; t.fib+=c.fib*it.qty; t.veg+=(c.veg||0)*it.qty;
+    const f = itemFactor(it, c);
+    t.cal+=c.cal*f; t.p+=c.p*f; t.f+=c.f*f; t.c+=c.c*f; t.fib+=c.fib*f; t.veg+=(c.veg||0)*f;
   }
   return t;
 }
@@ -510,7 +528,7 @@ function renderToday(){
   $('#checklist').innerHTML = `
     <div class="checkrow ${vegDone?'done':''}">
       <div class="mark">${vegDone?'✓':'🥦'}</div>
-      <div class="what">Eat 1 lb of veggies<small>${r1(t.veg)} / ${T.veg} oz — meals count automatically; loose veg below</small>
+      <div class="what">Eat 1 lb of veggies<small>${r1(t.veg)} / ${T.veg} oz (1 lb ≈ 454 g) — meals count automatically; loose veg below</small>
         <div class="inlinectl">
           <button data-veg="2">+2 oz</button><button data-veg="4">+4 oz</button><button data-veg="8">+8 oz</button>
           ${d.extraVeg?`<button data-veg="reset">reset (${r1(d.extraVeg)} oz extra)</button>`:''}
@@ -578,14 +596,19 @@ function renderToday(){
     }).join('');
     const rows = (d.meals[mkey]||[]).map((it,idx)=>{
       const c = comp(it.cid); if(!c) return '';
+      const f = itemFactor(it, c);
+      const ctl = (it.g != null && c.servG)
+        ? `<div class="qty"><input type="number" class="gin" inputmode="decimal" value="${it.g}" data-meal="${mkey}" data-idx="${idx}" aria-label="grams"> <span class="gunit">g</span></div>`
+        : `<div class="qty">
+            <button data-meal="${mkey}" data-idx="${idx}" data-act="minus" aria-label="less">−</button>
+            <span>${it.qty}</span>
+            <button data-meal="${mkey}" data-idx="${idx}" data-act="plus" aria-label="more">+</button>
+          </div>`;
+      const sub = (it.g != null && c.servG) ? `weighed` : `${c.serving}${it.qty!==1?` × ${it.qty}`:''}`;
       return `<div class="mealitem">
-        <div class="iname">${c.name}<small>${c.serving}${it.qty!==1?` × ${it.qty}`:''}</small></div>
-        <div class="qty">
-          <button data-meal="${mkey}" data-idx="${idx}" data-act="minus" aria-label="less">−</button>
-          <span>${it.qty}</span>
-          <button data-meal="${mkey}" data-idx="${idx}" data-act="plus" aria-label="more">+</button>
-        </div>
-        <div class="imac">${Math.round(c.cal*it.qty)} cal · ${r1(c.p*it.qty)}p</div>
+        <div class="iname">${c.name}<small>${sub}</small></div>
+        ${ctl}
+        <div class="imac">${Math.round(c.cal*f)} cal · ${r1(c.p*f)}p</div>
         <button class="rm" data-meal="${mkey}" data-idx="${idx}" data-act="rm" aria-label="remove">✕</button>
       </div>`;
     }).join('');
@@ -595,6 +618,7 @@ function renderToday(){
       ${rows || `<div class="small">nothing yet — add a component below</div>${usual?`<button class="usualbtn" data-usual="${mkey}">↺ same as last time</button>`:''}`}
       <div class="addrow">
         <select id="sel-${mkey}">${opts}</select>
+        <input type="number" id="g-${mkey}" class="gadd" inputmode="decimal" placeholder="g" hidden>
         <button data-addmeal="${mkey}">Add</button>
       </div>
       <div class="mealtotal">
@@ -604,14 +628,39 @@ function renderToday(){
     </div>`;
   }).join('');
 
+  // grams box appears beside Add when the picked component is weighable
+  MEALS.forEach(([mkey])=>{
+    const sel = $('#sel-'+mkey), gbox = $('#g-'+mkey);
+    if(!sel || !gbox) return;
+    const sync = ()=>{
+      const c = comp(sel.value);
+      gbox.hidden = !(c && c.servG);
+      if(c && c.servG) gbox.placeholder = `g (≈${c.servG})`;
+    };
+    sel.onchange = sync; sync();
+  });
   $$('#mealcards [data-addmeal]').forEach(b => b.onclick = ()=>{
     const mkey = b.dataset.addmeal;
     const sel = $('#sel-'+mkey);
     if(!sel.value) return;
     const list = day(viewDate).meals[mkey];
-    const existing = list.find(it=>it.cid===sel.value);
-    if(existing) existing.qty = r1(existing.qty+1); else list.push({cid:sel.value, qty:1});
+    const c = comp(sel.value);
+    if(c && c.servG){
+      const gv = parseFloat($('#g-'+mkey).value);
+      const g = (!isNaN(gv) && gv>0) ? r1(gv) : c.servG;
+      const existing = list.find(it=>it.cid===sel.value && it.g!=null);
+      if(existing) existing.g = r1(existing.g + g); else list.push({cid:sel.value, g});
+    } else {
+      const existing = list.find(it=>it.cid===sel.value && it.g==null);
+      if(existing) existing.qty = r1(existing.qty+1); else list.push({cid:sel.value, qty:1});
+    }
     save(); render();
+  });
+  $$('#mealcards .gin').forEach(inp => inp.onchange = ()=>{
+    const {meal, idx} = inp.dataset;
+    const it = day(viewDate).meals[meal][+idx]; if(!it) return;
+    const v = parseFloat(inp.value);
+    if(!isNaN(v) && v>0){ it.g = r1(v); save(); render(); }
   });
   $$('#mealcards [data-usual]').forEach(b => b.onclick = ()=>{
     const items = lastLogged(b.dataset.usual);
@@ -751,7 +800,7 @@ function renderLibrary(){
     return `<div class="libgroup"><h3>${label}</h3>` + items.map(c=>`
       <div class="librow">
         <div class="lname">${c.name} <small>· ${c.serving}</small></div>
-        <div class="lmac">${c.cal} cal · ${c.p}p · ${c.f}f · ${c.c}c · ${c.fib}fib${c.veg?` · ${c.veg}oz veg`:''}</div>
+        <div class="lmac">${c.cal} cal · ${c.p}p · ${c.f}f · ${c.c}c · ${c.fib}fib${c.veg?` · ${c.veg}oz veg`:''}${c.servG?` · ⚖ ${c.servG}g`:''}</div>
         <button class="ed" data-edit="${c.id}" aria-label="edit">✎</button>
         <button class="del" data-del="${c.id}" aria-label="delete">✕</button>
       </div>`).join('') + `</div>`;
@@ -776,6 +825,7 @@ function startEdit(id){
   $('#cf-name').value=c.name; $('#cf-serving').value=c.serving;
   $('#cf-cal').value=c.cal; $('#cf-p').value=c.p; $('#cf-f').value=c.f;
   $('#cf-c').value=c.c; $('#cf-fib').value=c.fib; $('#cf-veg').value=c.veg||'';
+  $('#cf-servg').value=c.servG||'';
   $$('#cf-groups input').forEach(i=> i.checked = c.groups.includes(i.value));
   $('#cf-cancel').hidden = false;
   $('#compform').scrollIntoView({behavior:'smooth', block:'center'});
@@ -783,7 +833,7 @@ function startEdit(id){
 $('#cf-cancel').onclick = ()=>{ editingId=null; clearForm(); };
 function clearForm(){
   $('#formtitle').textContent = 'Add a component';
-  ['name','serving','cal','p','f','c','fib','veg'].forEach(k=> $('#cf-'+k).value='');
+  ['name','serving','cal','p','f','c','fib','veg','servg'].forEach(k=> $('#cf-'+k).value='');
   $$('#cf-groups input').forEach(i=> i.checked=false);
   $('#cf-cancel').hidden = true;
 }
@@ -795,6 +845,8 @@ $('#cf-save').onclick = ()=>{
   const num = id => parseFloat($('#'+id).value)||0;
   const data = { name, serving:$('#cf-serving').value.trim()||'1 serving',
     cal:num('cf-cal'), p:num('cf-p'), f:num('cf-f'), c:num('cf-c'), fib:num('cf-fib'), veg:num('cf-veg'), groups };
+  const sg = num('cf-servg');
+  if(sg > 0) data.servG = sg; else if(editingId) delete comp(editingId).servG;
   if(editingId){ Object.assign(comp(editingId), data); }
   else {
     const id = 'c'+Date.now().toString(36);
