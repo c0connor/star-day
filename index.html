@@ -33,55 +33,58 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#D9A408">
+<meta name="theme-color" content="#5B4FC7">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
 <style>
+  /* ✨ GALAXY PALETTE — var names are roles kept from v1:
+     --green = primary accent (now periwinkle), --green-soft = its wash,
+     --terracotta = remove/danger (now nebula pink), --sun = star gold. */
   :root {
-    --bg: #F6F2E7;
-    --card: #FFFDF6;
-    --ink: #33312A;
-    --muted: #6E6A5E;
-    --line: #E7E1D0;
-    --green: #4A7A47;
-    --green-deep: #3E6B3C;
-    --green-soft: #EAF1E4;
+    --bg: #EFEDFA;
+    --card: #FCFBFF;
+    --ink: #2E2B45;
+    --muted: #6F6A92;
+    --line: #E3DFF4;
+    --green: #5B4FC7;
+    --green-deep: #4A3FA8;
+    --green-soft: #EAE6FB;
     --sun: #D9A408;
     --sun-ink: #7A5600;
     --sun-soft: #F8ECC8;
-    --terracotta: #A54E28;
+    --terracotta: #C2517E;
     /* chart tokens (validated data-viz palette) */
     --series-weight: #2a78d6;
     --series-avg: #1baf7a;
-    --chart-grid: #e1e0d9;
-    --chart-axis: #c3c2b7;
-    --chart-muted: #898781;
+    --chart-grid: #E4E1F1;
+    --chart-axis: #C6C2DD;
+    --chart-muted: #8B87A8;
     --good-text: #006300;
     --warn: #b45309;
-    --shadow: 0 1px 3px rgba(60,55,40,.08), 0 4px 14px rgba(60,55,40,.06);
+    --shadow: 0 1px 3px rgba(59,50,110,.09), 0 4px 14px rgba(59,50,110,.07);
     --radius: 16px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #171A14;
-      --card: #21251C;
-      --ink: #EAE7DA;
-      --muted: #A5A896;
-      --line: #343A2D;
-      --green: #3E6B3C;
-      --green-deep: #9CC48B;
-      --green-soft: #2A3325;
-      --sun: #D9A408;
-      --sun-ink: #EBC868;
-      --sun-soft: #3A3213;
-      --terracotta: #E0916A;
+      --bg: #0E0D1E;
+      --card: #1B1A31;
+      --ink: #E9E7F7;
+      --muted: #A29EC6;
+      --line: #33304F;
+      --green: #6F61D8;
+      --green-deep: #ABA0F2;
+      --green-soft: #2B2849;
+      --sun: #E5B93C;
+      --sun-ink: #F0D07A;
+      --sun-soft: #332C55;
+      --terracotta: #E081B8;
       --series-weight: #3987e5;
       --series-avg: #199e70;
-      --chart-grid: #2c2c2a;
-      --chart-axis: #383835;
-      --chart-muted: #898781;
+      --chart-grid: #2B2846;
+      --chart-axis: #3E3A5F;
+      --chart-muted: #8D89AE;
       --good-text: #0ca30c;
       --warn: #f0a44a;
-      --shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.2);
+      --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
     }
   }
   * { box-sizing: border-box; }
