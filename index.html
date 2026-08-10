@@ -333,7 +333,7 @@
     </div>
   </section>
 
-  <footer>Star Day v2 · updated Aug 8 · made with Claude Code · your data never leaves this browser</footer>
+  <footer>Star Day v2 · updated Aug 10 · made with Claude Code · your data never leaves this browser</footer>
 </main>
 
 <script>
@@ -388,6 +388,8 @@ function seedComponents(){ return [
   {id:'tempeh',    name:'Tempeh',                   serving:'6 oz',               cal:340, p:34,  f:18, c:15,  fib:9,  veg:0,   servG:170, groups:['protein']},
   {id:'soycurls',  name:'Soy Curls',                serving:'1 cup rehydrated',   cal:200, p:22,  f:6,  c:14,  fib:4,  veg:0,   servG:130, groups:['protein']},
   {id:'soychorizo',name:'Soy Chorizo',              serving:'2.5 oz',             cal:160, p:10,  f:11, c:8,   fib:0,  veg:0,   servG:71,  groups:['protein']},
+  {id:'tofuscramble',name:'Tofu Scramble (your batch)',serving:'1 scoop (200 g)', cal:275, p:28.5,f:13.5,c:10.5,fib:1.5,veg:1,  servG:200, groups:['protein']},
+  {id:'garlicyog', name:'Garlic Yogurt Sauce',      serving:'dollop (60 g)',      cal:60,  p:5,   f:3,  c:2.5, fib:0,  veg:0,   servG:60,  groups:['adds','snacks']},
   {id:'potato',    name:'Boiled Potato',            serving:'1 medium',           cal:130, p:3,   f:0,  c:30,  fib:3,  veg:0,   servG:150, groups:['starch']},
   {id:'sweetpot',  name:'Sweet Potato',             serving:'1 medium',           cal:105, p:2,   f:0,  c:24,  fib:4,  veg:0,   servG:130, groups:['starch']},
   {id:'rice',      name:'Cooked Rice',              serving:'¾ cup',              cal:155, p:3,   f:0,  c:33,  fib:1,  veg:0,   servG:140, groups:['starch']},
@@ -401,7 +403,7 @@ function seedComponents(){ return [
 ];}
 
 function defaultState(){ return {
-  settings: { targets:{ cal:1550, protein:100, veg:16 } },
+  settings: { targets:{ cal:1300, protein:100, veg:16 } },
   components: seedComponents(),
   days: {}
 };}
@@ -416,13 +418,13 @@ function load(){
     // migrate from v1 (goal tab removed; three targets only)
     const t = (s.settings && s.settings.targets) || {};
     s.settings = { targets: {
-      cal: t.cal || 1550,
+      cal: (t.cal === 1550 ? 1300 : t.cal) || 1300,
       protein: (t.protein === 110 ? 100 : t.protein) || 100,
       veg: t.veg || 16
     }};
     // migrate to v2.1 weigh mode: add serving weights to existing components,
-    // and insert components new in v2.1 (deletions she made stay deleted)
-    const NEW_IN_V21 = ['hummus'];
+    // and insert components new since v2 (deletions she made stay deleted)
+    const NEW_IN_V21 = ['hummus','tofuscramble','garlicyog'];
     for(const seed of seedComponents()){
       const mine = s.components.find(c=>c.id===seed.id);
       if(!mine){ if(NEW_IN_V21.includes(seed.id)) s.components.push(seed); }
