@@ -388,9 +388,9 @@ function seedComponents(){ return [
   {id:'tempeh',    name:'Tempeh',                   serving:'6 oz',               cal:340, p:34,  f:18, c:15,  fib:9,  veg:0,   servG:170, groups:['protein']},
   {id:'soycurls',  name:'Soy Curls',                serving:'1 cup rehydrated',   cal:200, p:22,  f:6,  c:14,  fib:4,  veg:0,   servG:130, groups:['protein']},
   {id:'soychorizo',name:'Soy Chorizo',              serving:'2.5 oz',             cal:160, p:10,  f:11, c:8,   fib:0,  veg:0,   servG:71,  groups:['protein']},
-  {id:'tofuscramble',name:'Tofu Scramble (your batch)',serving:'1 scoop (200 g)', cal:275, p:28.5,f:13.5,c:10.5,fib:1.5,veg:1,  servG:200, groups:['protein']},
-  {id:'garlicyog', name:'Garlic Yogurt Sauce',      serving:'dollop (60 g)',      cal:60,  p:5,   f:3,  c:2.5, fib:0,  veg:0,   servG:60,  groups:['adds','snacks']},
-  {id:'potato',    name:'Boiled Potato',            serving:'1 medium',           cal:130, p:3,   f:0,  c:30,  fib:3,  veg:0,   servG:150, groups:['starch']},
+  {id:'tofuscramble',name:'Tofu Scramble (your batch)',serving:'200 g ≈ heaping ¾ cup', cal:275, p:28.5,f:13.5,c:10.5,fib:1.5,veg:1,  servG:200, groups:['protein']},
+  {id:'garlicyog', name:'Garlic Yogurt Sauce',      serving:'60 g = 4 tbsp (¼ cup)',   cal:60,  p:5,   f:3,  c:2.5, fib:0,  veg:0,   servG:60,  groups:['adds','snacks']},
+  {id:'potato',    name:'Boiled Potato',            serving:'150 g ≈ 4–5 baby potatoes', cal:130, p:3, f:0, c:30, fib:3, veg:0, servG:150, groups:['starch']},
   {id:'sweetpot',  name:'Sweet Potato',             serving:'1 medium',           cal:105, p:2,   f:0,  c:24,  fib:4,  veg:0,   servG:130, groups:['starch']},
   {id:'rice',      name:'Cooked Rice',              serving:'¾ cup',              cal:155, p:3,   f:0,  c:33,  fib:1,  veg:0,   servG:140, groups:['starch']},
   {id:'roastveg',  name:'Roasted Veg / Salad',      serving:'1–1.5 cup',          cal:90,  p:3,   f:3,  c:12,  fib:4,  veg:6,   servG:170, groups:['adds']},
@@ -429,6 +429,16 @@ function load(){
       const mine = s.components.find(c=>c.id===seed.id);
       if(!mine){ if(NEW_IN_V21.includes(seed.id)) s.components.push(seed); }
       else if(seed.servG && !mine.servG) mine.servG = seed.servG;
+    }
+    // clearer serving labels (only when she hasn't edited them herself)
+    const RELABEL = {
+      tofuscramble: ['1 scoop (200 g)', '200 g ≈ heaping ¾ cup'],
+      garlicyog:    ['dollop (60 g)',   '60 g = 4 tbsp (¼ cup)'],
+      potato:       ['1 medium',        '150 g ≈ 4–5 baby potatoes']
+    };
+    for(const id in RELABEL){
+      const mine = s.components.find(c=>c.id===id);
+      if(mine && mine.serving === RELABEL[id][0]) mine.serving = RELABEL[id][1];
     }
     return s;
   } catch(e){ return defaultState(); }
