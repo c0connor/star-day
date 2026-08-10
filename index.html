@@ -397,7 +397,7 @@ function seedComponents(){ return [
   {id:'frozveg',   name:'Frozen veg, steamed',      serving:'1.5 cup',            cal:80,  p:4,   f:0,  c:14,  fib:5,  veg:7,   servG:200, groups:['adds']},
   {id:'tzatziki',  name:'Tzatziki',                 serving:'⅓ cup',              cal:100, p:5,   f:8,  c:3,   fib:0,  veg:0,   servG:80,  groups:['adds']},
   {id:'hbegg',     name:'Hard-Boiled Egg',          serving:'1 egg',              cal:70,  p:6,   f:5,  c:0.5, fib:0,  veg:0,   groups:['snacks']},
-  {id:'hummus',    name:'Hummus',                   serving:'2 tbsp (30 g)',      cal:70,  p:2,   f:5,  c:4,   fib:1.5,veg:0,   servG:30,  groups:['snacks','adds']},
+  {id:'hummus',    name:'Hummus (homemade)',        serving:'2 tbsp (30 g)',      cal:62,  p:2.7, f:2.7,c:7.5, fib:2,  veg:0,   servG:30,  groups:['snacks','adds']},
   {id:'hummusveg', name:'Hummus + Veg',             serving:'2 tbsp + veg',       cal:100, p:4,   f:6,  c:10,  fib:3,  veg:3,   groups:['snacks']},
   {id:'chiapud',   name:'Chia Pudding',             serving:'your usual recipe',  cal:540, p:26,  f:35, c:34,  fib:15, veg:0,   groups:['snacks','breakfast']}
 ];}
@@ -439,6 +439,11 @@ function load(){
     for(const id in RELABEL){
       const mine = s.components.find(c=>c.id===id);
       if(mine && mine.serving === RELABEL[id][0]) mine.serving = RELABEL[id][1];
+    }
+    // store-bought hummus → her homemade recipe (only if she hasn't edited it)
+    const hum = s.components.find(c=>c.id==='hummus');
+    if(hum && hum.name === 'Hummus' && hum.cal === 70){
+      Object.assign(hum, {name:'Hummus (homemade)', cal:62, p:2.7, f:2.7, c:7.5, fib:2});
     }
     return s;
   } catch(e){ return defaultState(); }
