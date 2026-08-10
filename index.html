@@ -172,6 +172,7 @@
   .addrow { display: flex; gap: 8px; margin-top: 10px; }
   .addrow select { flex: 1; min-width: 0; }
   .gstat { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .psel { max-width: 150px; font-size: 12.5px; padding: 5px 6px; flex: none; }
   .addrow button { border: 1px solid var(--green); background: var(--green); color: #fff; border-radius: 10px; padding: 7px 14px; font-weight: 600; }
   .mealtotal { display: flex; justify-content: space-between; margin-top: 9px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; gap: 4px; }
   .mealtotal b { color: var(--ink); font-weight: 600; }
@@ -361,7 +362,31 @@ function r1(n){ return Math.round(n*10)/10; }
 function daysBetween(a,b){ return Math.round((dateOf(b)-dateOf(a))/86400000); }
 
 /* ───────────────────────── seed data ───────────────────────── */
-function seedComponents(){ return [
+/* Portion menus: [label, factor-of-base-serving]. Components without a menu
+   fall back to GENERIC_UNITS. Factors multiply the component's macros. */
+const GENERIC_UNITS = [['½ serving',0.5],['1 serving',1],['1½ servings',1.5],['2 servings',2],['3 servings',3]];
+const UNIT_MENUS = {
+  egg:         [['1 egg',1],['2 eggs',2],['3 eggs',3]],
+  eggwhites:   [['¼ cup',1],['½ cup',2],['¾ cup',3]],
+  hbegg:       [['1 egg',1],['2 eggs',2]],
+  nooch:       [['1 tbsp',0.5],['2 tbsp — usual',1],['3 tbsp',1.5]],
+  shake:       [['half shake',0.5],['full shake — usual',1]],
+  tofuscramble:[['½ cup',0.6],['heaping ¾ cup — usual',1],['1 cup',1.2],['1½ cups',1.8]],
+  garlicyog:   [['1 tbsp',0.25],['2 tbsp',0.5],['4 tbsp (¼ cup) — usual',1],['½ cup',2]],
+  hummus:      [['1 tbsp',0.5],['2 tbsp — usual',1],['4 tbsp (¼ cup)',2]],
+  potato:      [['2–3 babies',0.5],['4–5 babies — usual',1],['6–7 babies',1.5],['8–10 babies',2]],
+  sweetpot:    [['half',0.5],['1 medium — usual',1],['1 large',1.5]],
+  rice:        [['½ cup',0.67],['¾ cup — usual',1],['1 cup',1.33],['1½ cups',2]],
+  dal:         [['½ cup',0.5],['1 cup — usual',1],['1½ cups',1.5],['2 cups',2]],
+  chana:       [['½ cup',0.5],['1 cup — usual',1],['1½ cups',1.5],['2 cups',2]],
+  mexbeans:    [['½ cup',0.5],['1 cup — usual',1],['1½ cups',1.5],['2 cups',2]],
+  plateveg:    [['half plate',0.5],['full plate — usual',1],['heaping plate',1.5]],
+  frozveg:     [['1 cup',0.67],['1½ cups — usual',1],['2 cups',1.33],['3 cups',2]],
+  tofu:        [['half portion',0.5],['5–6 oz — usual',1],['1½ portions',1.5]],
+  tempeh:      [['3 oz',0.5],['6 oz — usual',1]],
+  greekyog:    [['half pot-cup',0.5],['170 g cup — usual',1]]
+};
+function seedComponents(){ const list = [
   {id:'egg',       name:'Egg',                      serving:'1 large',            cal:70,  p:6,   f:5,  c:0.5, fib:0,  veg:0,   groups:['breakfast']},
   {id:'eggwhites', name:'Egg whites',               serving:'¼ cup (≈2 whites)',  cal:35,  p:7,   f:0,  c:1,   fib:0,  veg:0,   groups:['breakfast']},
   {id:'scramble2', name:'2-Egg Scramble',           serving:'2 eggs + veg + kraut',cal:220, p:12,  f:9,  c:5,   fib:1,  veg:3,   groups:['breakfast']},
@@ -398,7 +423,10 @@ function seedComponents(){ return [
   {id:'hummus',    name:'Hummus (homemade)',        serving:'2 tbsp',             cal:62,  p:2.7, f:2.7,c:7.5, fib:2,  veg:0,   servG:30,  groups:['snacks','adds']},
   {id:'hummusveg', name:'Hummus + Veg',             serving:'2 tbsp + veg',       cal:100, p:4,   f:6,  c:10,  fib:3,  veg:3,   groups:['snacks']},
   {id:'chiapud',   name:'Chia Pudding',             serving:'your usual recipe',  cal:540, p:26,  f:35, c:34,  fib:15, veg:0,   groups:['snacks','breakfast']}
-];}
+];
+  for(const c of list){ if(UNIT_MENUS[c.id]) c.units = UNIT_MENUS[c.id]; }
+  return list;
+}
 
 function defaultState(){ return {
   settings: { targets:{ cal:1300, protein:100, veg:16 } },
@@ -426,7 +454,10 @@ function load(){
     for(const seed of seedComponents()){
       const mine = s.components.find(c=>c.id===seed.id);
       if(!mine){ if(NEW_IN_V21.includes(seed.id)) s.components.push(seed); }
-      else if(seed.servG && !mine.servG) mine.servG = seed.servG;
+      else {
+        if(seed.servG && !mine.servG) mine.servG = seed.servG;
+        if(seed.units && !mine.units) mine.units = seed.units;
+      }
     }
     // clearer serving labels — each row maps one older default to the current
     // one, so any past version reaches the final label; her own edits are kept
@@ -620,14 +651,16 @@ function renderToday(){
     const rows = (d.meals[mkey]||[]).map((it,idx)=>{
       const c = comp(it.cid); if(!c) return '';
       const f = itemFactor(it, c);
-      const ctl = (it.g != null && c.servG)
-        ? `<div class="qty"><span class="gstat">${it.g} g</span></div>`
-        : `<div class="qty">
-            <button data-meal="${mkey}" data-idx="${idx}" data-act="minus" aria-label="less">−</button>
-            <span>${it.qty}</span>
-            <button data-meal="${mkey}" data-idx="${idx}" data-act="plus" aria-label="more">+</button>
-          </div>`;
-      const sub = (it.g != null && c.servG) ? `weighed back when` : `${c.serving}${it.qty!==1?` × ${it.qty}`:''}`;
+      let ctl;
+      if(it.g != null && c.servG){
+        ctl = `<div class="qty"><span class="gstat">${it.g} g</span></div>`;
+      } else {
+        const units = c.units || GENERIC_UNITS;
+        let sizeOpts = units.map(u=>`<option value="${u[1]}" ${Math.abs(u[1]-it.qty)<0.01?'selected':''}>${u[0]}</option>`).join('');
+        if(!units.some(u=>Math.abs(u[1]-it.qty)<0.01)) sizeOpts = `<option value="${it.qty}" selected>× ${it.qty}</option>` + sizeOpts;
+        ctl = `<select class="psel" data-meal="${mkey}" data-idx="${idx}" aria-label="portion size">${sizeOpts}</select>`;
+      }
+      const sub = (it.g != null && c.servG) ? `weighed back when` : c.serving;
       return `<div class="mealitem">
         <div class="iname">${c.name}<small>${sub}</small></div>
         ${ctl}
@@ -666,11 +699,13 @@ function renderToday(){
   $$('#mealcards [data-act]').forEach(b => b.onclick = ()=>{
     const {meal, idx, act} = b.dataset;
     const list = day(viewDate).meals[meal];
-    const it = list[+idx]; if(!it) return;
-    if(act==='plus') it.qty = r1(it.qty+0.5);
-    if(act==='minus') it.qty = r1(Math.max(0.5, it.qty-0.5));
-    if(act==='rm') list.splice(+idx,1);
-    save(); render();
+    if(act==='rm' && list[+idx]){ list.splice(+idx,1); save(); render(); }
+  });
+  $$('#mealcards .psel').forEach(sel => sel.onchange = ()=>{
+    const it = day(viewDate).meals[sel.dataset.meal][+sel.dataset.idx];
+    if(!it) return;
+    const v = parseFloat(sel.value);
+    if(!isNaN(v) && v>0){ it.qty = v; save(); render(); }
   });
 }
 $('#prevday').onclick = ()=>{ viewDate = addDays(viewDate,-1); render(); };
