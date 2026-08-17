@@ -176,6 +176,7 @@
   <div class="card" id="settings" hidden>
     <h2>Settings</h2>
     <div class="row"><label class="small" for="s-water">Water goal (glasses/day)</label><input id="s-water" type="number" min="1" max="20"></div>
+    <div class="row"><label class="small"><input type="checkbox" id="s-cycle" style="width:auto;margin-right:6px;accent-color:var(--accent)">Track my cycle (period days shade the Journey charts)</label></div>
     <div class="backbtns">
       <button id="exportbtn">⬇ Back up (.json)</button>
       <label for="importfile">⬆ Restore from backup</label>
@@ -232,6 +233,8 @@
       <button data-v="1">😴 rough</button><button data-v="2">🙂 ok</button><button data-v="3">✨ great</button></div></div>
     <div class="feelrow"><span class="fl">moved</span><div class="pips" data-k="move">
       <button data-v="1">🛋️ rest</button><button data-v="2">🚶 walked</button><button data-v="3">💪 worked out</button></div></div>
+    <div class="feelrow" id="cyclerow"><span class="fl">cycle</span><div class="pips" data-k="period">
+      <button data-v="1">🩸 period day</button></div><span class="small" id="cyclenote"></span></div>
     <div class="foodrow" style="margin-top:10px">
       <button id="noteMic" class="miclite" aria-label="Talk">🎙️</button>
       <input type="text" id="noteinput" placeholder="anything else — cravings, stress, a walk, your cycle…" autocomplete="off">
@@ -289,7 +292,20 @@ function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;'
 let toastT; function showToast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600); }
 
 /* ───────── state + migration ───────── */
-function defaultState(){ return { v:3, settings:{ waterGoal:8 }, days:{} }; }
+function defaultState(){ return { v:3, settings:{ waterGoal:8, cycle:true }, days:{} }; }
+function trackCycle(){ return state.settings.cycle !== false; }
+/* period starts = period days whose previous day wasn't one */
+function periodStarts(){
+  return Object.keys(state.days).filter(iso => state.days[iso].period && !(state.days[addDays(iso,-1)]||{}).period).sort();
+}
+function cycleInfo(iso){
+  const starts = periodStarts().filter(s => s <= iso);
+  if(!starts.length) return null;
+  const last = starts[starts.length-1];
+  const lens = []; for(let i=1;i<starts.length;i++){ const L=daysBetween(starts[i-1],starts[i]); if(L>=18 && L<=45) lens.push(L); }
+  const avg = lens.length ? Math.round(lens.reduce((a,b)=>a+b,0)/lens.length) : null;
+  return { day: daysBetween(last, iso)+1, avgLen: avg, next: avg ? addDays(last, avg) : null };
+}
 function migrateOld(old){
   const s = defaultState();
   const comps = old.components || [];
@@ -378,6 +394,13 @@ function render(){
   // how I felt
   $$('.pips').forEach(p => p.querySelectorAll('button').forEach(b => b.classList.toggle('on', d[p.dataset.k]===+b.dataset.v)));
   if(document.activeElement !== $('#noteinput')) $('#noteinput').value = d.note || '';
+  $('#cyclerow').hidden = !trackCycle();
+  if(trackCycle()){
+    const ci = cycleInfo(iso);
+    $('#cyclenote').textContent = !ci ? '' :
+      d.period ? `day ${ci.day} · period` :
+      `day ${ci.day}${ci.next && ci.next >= iso ? ` · next around ${niceDate(ci.next).replace(/^\w+, /,'')}` : ''}`;
+  }
 
   if(activeTab()==='journey') renderJourney();
 }
@@ -458,11 +481,15 @@ function renderJourney(){
     pts = Object.keys(buckets).sort().map(k=>({iso:k, v: buckets[k].reduce((a,b)=>a+b,0)/buckets[k].length}));
   }
   const avg = (M.avg && !bucketed) ? rolling7(pts.map(p=>({iso:p.iso,w:p.v}))).map(a=>({iso:a.iso,v:a.w})) : null;
-  drawChart(pts, {x0, x1, kind:M.kind, min:M.min, max:M.max, ticks:M.ticks, avg, goal: M.goal?M.goal():null, unit:M.unit||''});
+  // period days in range → shaded bands behind the chart
+  const bands = [];
+  if(trackCycle()) for(let iso=x0; iso<=x1; iso=addDays(iso,1)){ if((state.days[iso]||{}).period) bands.push(iso); }
+  drawChart(pts, {x0, x1, kind:M.kind, min:M.min, max:M.max, ticks:M.ticks, avg, goal: M.goal?M.goal():null, unit:M.unit||'', bands});
   $('#legend').innerHTML =
     (M.kind==='line' ? `<span class="li"><span class="sw dot" style="background:var(--series-weight)"></span>${M.label}${bucketed?' (weekly avg)':''}</span>` : `<span class="li"><span class="sw" style="background:var(--series-weight);height:9px;border-radius:2px"></span>${M.label}${bucketed?' (weekly avg)':''}</span>`) +
     (avg ? `<span class="li"><span class="sw" style="background:var(--series-avg)"></span>7-day average — the truth</span>` : '') +
-    (M.goal ? `<span class="li"><span class="sw" style="background:repeating-linear-gradient(90deg,var(--chart-muted) 0 4px,transparent 4px 8px)"></span>goal</span>` : '');
+    (M.goal ? `<span class="li"><span class="sw" style="background:repeating-linear-gradient(90deg,var(--chart-muted) 0 4px,transparent 4px 8px)"></span>goal</span>` : '') +
+    (bands.length ? `<span class="li"><span class="sw" style="background:var(--pink);opacity:.35;height:10px;border-radius:2px"></span>period days</span>` : '');
   const notes = {
     weight: 'daily weight bounces 1–3 lbs — the green average is what\'s really happening',
     water: 'days you didn\'t tap any glasses are left blank, not zero',
@@ -557,6 +584,10 @@ function drawChart(pts, o){
   else { ymin=vs.length?Math.min(...vs)-2:150; ymax=vs.length?Math.max(...vs)+2:180; if(ymax-ymin<6){ const mid=(ymax+ymin)/2; ymin=mid-3; ymax=mid+3; } }
   const Y = v => mt+(H-mt-mb)*(ymax-v)/(ymax-ymin);
   let el='';
+  if(o.bands && o.bands.length){
+    const half = (W-ml-mr)/span/2;
+    for(const iso of o.bands){ const cx=X(iso); el+=`<rect x="${Math.max(ml,cx-half)}" y="${mt}" width="${Math.min(W-mr,cx+half)-Math.max(ml,cx-half)}" height="${H-mt-mb}" fill="var(--pink)" opacity=".18"/>`; }
+  }
   if(o.ticks){ for(const k in o.ticks){ el+=`<line x1="${ml}" y1="${Y(+k)}" x2="${W-mr}" y2="${Y(+k)}" stroke="var(--chart-grid)"/><text x="${ml-8}" y="${Y(+k)+4}" text-anchor="end" font-size="11" fill="var(--chart-muted)">${o.ticks[k]}</text>`; } }
   else { const step=(ymax-ymin)>16?5:(ymax-ymin)>8?2:1; for(let g=Math.ceil(ymin/step)*step; g<=ymax; g+=step){ el+=`<line x1="${ml}" y1="${Y(g)}" x2="${W-mr}" y2="${Y(g)}" stroke="var(--chart-grid)"/><text x="${ml-8}" y="${Y(g)+4}" text-anchor="end" font-size="11" fill="var(--chart-muted)">${g}</text>`; } }
   const tick = span>200?56:span>90?28:span>45?14:span>10?7:1;
@@ -596,7 +627,8 @@ function drawChart(pts, o){
 })();
 
 /* ───────── settings + backup ───────── */
-$('#gearBtn').onclick = ()=>{ const p=$('#settings'); p.hidden=!p.hidden; if(!p.hidden) $('#s-water').value=state.settings.waterGoal; };
+$('#gearBtn').onclick = ()=>{ const p=$('#settings'); p.hidden=!p.hidden; if(!p.hidden){ $('#s-water').value=state.settings.waterGoal; $('#s-cycle').checked = trackCycle(); } };
+$('#s-cycle').addEventListener('change', ()=>{ state.settings.cycle = $('#s-cycle').checked; save(); render(); });
 $('#s-water').addEventListener('input', ()=>{ const v=parseInt($('#s-water').value); if(v>0){ state.settings.waterGoal=v; save(); render(); } });
 $('#exportbtn').onclick = ()=>{ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`star-day-backup-${todayISO()}.json`; a.click(); URL.revokeObjectURL(a.href); };
 $('#importfile').onchange = ev=>{
