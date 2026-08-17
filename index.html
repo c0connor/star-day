@@ -3,27 +3,22 @@
 <head>
 <!--
   ══════════════════════════════════════════════════════════════
-  STAR DAY ⭐ v2 — a tiny, private meal assembler + star tracker
+  STAR DAY ⭐ v3 — weigh · say · sip
   Made for Christina · August 2026
 
-  v2 = the rule of three. Three tabs, three star checks, three
-  daily meters, three progress tiles, three settings. The Goal
-  tab is gone — goals live in your head; the app just tracks
-  the journey.
+  v3 is the great simplification. One screen. Three things:
+    ⚖️  weigh in (a number)
+    🎙️  say what you ate (talk or type — free text, no menus)
+    💧  tap water glasses
+  All three → ⭐. That's the whole app.
 
-  The star: a day earns ⭐ when you do all three —
-      1) eat 1 lb (16 oz) of veggies
-      2) photograph your meals
-      3) weigh yourself
+  Gone: meal assembler, component library, macros, portions,
+  photo check, veg ounces. If you never used it, it isn't here.
 
-  HOW TO TWEAK: colors live in ":root" (light) and the
-  "prefers-color-scheme: dark" block. Daily targets & backups:
-  the ⚙ button in the app. Meal components: the Library tab.
-  Anything else: ask Claude Code.
-
-  YOUR DATA: stored in this browser on this Mac (localStorage),
-  never sent anywhere. "Back up" downloads a .json — keep those
-  in iCloud. v1 data carries over automatically.
+  YOUR DATA: stored in this browser (localStorage), never sent
+  anywhere. Old weigh-ins carry over automatically. Old meal
+  logs are converted to plain-text food notes so nothing is lost.
+  ⚙ has Back up / Restore.
   ══════════════════════════════════════════════════════════════
 -->
 <meta charset="UTF-8">
@@ -36,198 +31,127 @@
 <meta name="theme-color" content="#5B4FC7">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
 <style>
-  /* ✨ GALAXY PALETTE — var names are roles kept from v1:
-     --green = primary accent (now periwinkle), --green-soft = its wash,
-     --terracotta = remove/danger (now nebula pink), --sun = star gold. */
   :root {
-    --bg: #EFEDFA;
-    --card: #FCFBFF;
-    --ink: #2E2B45;
-    --muted: #6F6A92;
-    --line: #E3DFF4;
-    --green: #5B4FC7;
-    --green-deep: #4A3FA8;
-    --green-soft: #EAE6FB;
-    --sun: #D9A408;
-    --sun-ink: #7A5600;
-    --sun-soft: #F8ECC8;
-    --terracotta: #C2517E;
-    /* chart tokens (validated data-viz palette) */
-    --series-weight: #2a78d6;
-    --series-avg: #1baf7a;
-    --chart-grid: #E4E1F1;
-    --chart-axis: #C6C2DD;
-    --chart-muted: #8B87A8;
-    --good-text: #006300;
-    --warn: #b45309;
-    --shadow: 0 1px 3px rgba(59,50,110,.09), 0 4px 14px rgba(59,50,110,.07);
-    --radius: 16px;
+    --bg: #EFEDFA; --card: #FCFBFF; --ink: #2E2B45; --muted: #6F6A92; --line: #E3DFF4;
+    --accent: #5B4FC7; --accent-deep: #4A3FA8; --accent-soft: #EAE6FB;
+    --sun: #D9A408; --sun-ink: #7A5600; --sun-soft: #F8ECC8;
+    --pink: #C2517E; --water: #3B8BE0; --water-soft: #DCEBFB;
+    --series-weight: #2a78d6; --series-avg: #1baf7a;
+    --chart-grid: #E4E1F1; --chart-axis: #C6C2DD; --chart-muted: #8B87A8; --good-text: #006300;
+    --shadow: 0 1px 3px rgba(59,50,110,.09), 0 4px 14px rgba(59,50,110,.07); --radius: 18px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0E0D1E;
-      --card: #1B1A31;
-      --ink: #E9E7F7;
-      --muted: #A29EC6;
-      --line: #33304F;
-      --green: #6F61D8;
-      --green-deep: #ABA0F2;
-      --green-soft: #2B2849;
-      --sun: #E5B93C;
-      --sun-ink: #F0D07A;
-      --sun-soft: #332C55;
-      --terracotta: #E081B8;
-      --series-weight: #3987e5;
-      --series-avg: #199e70;
-      --chart-grid: #2B2846;
-      --chart-axis: #3E3A5F;
-      --chart-muted: #8D89AE;
-      --good-text: #0ca30c;
-      --warn: #f0a44a;
+      --bg: #0E0D1E; --card: #1B1A31; --ink: #E9E7F7; --muted: #A29EC6; --line: #33304F;
+      --accent: #6F61D8; --accent-deep: #ABA0F2; --accent-soft: #2B2849;
+      --sun: #E5B93C; --sun-ink: #F0D07A; --sun-soft: #332C55;
+      --pink: #E081B8; --water: #5AA3F0; --water-soft: #1F2C4A;
+      --series-weight: #3987e5; --series-avg: #199e70;
+      --chart-grid: #2B2846; --chart-axis: #3E3A5F; --chart-muted: #8D89AE; --good-text: #0ca30c;
       --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
     }
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   html, body { margin: 0; padding: 0; }
-  body {
-    background: var(--bg); color: var(--ink);
-    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    line-height: 1.45; padding: 28px 20px 80px;
-  }
-  main { max-width: 640px; margin: 0 auto; }
+  body { background: var(--bg); color: var(--ink); font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.45; padding: 24px 18px 80px; }
+  main { max-width: 560px; margin: 0 auto; }
   button { font: inherit; cursor: pointer; }
-  input, select { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; }
-  input:focus, select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
+  input { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  header { position: relative; margin-bottom: 14px; }
+  .title-row { display: flex; align-items: baseline; gap: 10px; padding-right: 44px; }
+  .title-row .star { font-size: 26px; }
   h1 { font-size: 27px; font-weight: 700; margin: 0; }
   .tagline { margin: 2px 0 0 2px; font-size: 13px; color: var(--muted); }
-  header { margin-bottom: 14px; position: relative; }
-  .title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding-right: 42px; }
-  .title-row .star { font-size: 26px; }
-  #gearBtn { position: absolute; top: 0; right: 0; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--muted); font-size: 16px; box-shadow: var(--shadow); }
-  #gearBtn:hover { color: var(--green-deep); border-color: var(--green); }
+  #gearBtn { position: absolute; top: 0; right: 0; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--muted); font-size: 16px; box-shadow: var(--shadow); }
 
-  /* tabs */
-  nav { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  nav button { border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 7px 16px; font-weight: 600; box-shadow: var(--shadow); }
-  nav button.active { background: var(--green); border-color: var(--green); color: #fff; }
-  nav button:hover:not(.active) { color: var(--green-deep); border-color: var(--green); }
-
-  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 18px; margin-bottom: 12px; }
-  .card h2 { font-size: 15px; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .card h2 .chip { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; margin-bottom: 12px; }
+  .card h2 { font-size: 15px; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .card h2 .chip { font-size: 12px; font-weight: 500; color: var(--muted); }
   .small { font-size: 12.5px; color: var(--muted); }
 
-  /* settings panel */
-  #settings .setgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-  #settings label { font-size: 11.5px; color: var(--muted); display: block; margin-bottom: 2px; }
-  #settings input { width: 100%; }
-  .backbtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .backbtns button, .backbtns label { border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
-
-  /* date nav */
-  .datenav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .datenav .dlabel { font-weight: 700; font-size: 17px; }
-  .datenav button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow); font-size: 16px; color: var(--muted); }
+  /* date + star line */
+  .datenav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .datenav .dlabel { font-weight: 700; font-size: 18px; }
+  .datenav button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow); font-size: 17px; color: var(--muted); }
   .datenav button:disabled { opacity: .3; cursor: default; }
+  #starline { text-align: center; font-size: 13.5px; color: var(--muted); margin: 0 0 12px; min-height: 22px; }
+  #starline.won { color: var(--sun-ink); font-weight: 700; font-size: 16px; }
+  #starline .d { opacity: .45; }
+  #starline .d.on { opacity: 1; }
 
-  /* star checklist */
-  .checkrow { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 14.5px; }
-  .checkrow:last-of-type { border-bottom: none; }
-  .checkrow .mark { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--green-soft); font-size: 14px; flex: none; margin-top: 2px; }
-  .checkrow.done .mark { background: var(--green); color: #fff; }
-  .checkrow .what { flex: 1; }
-  .checkrow .what small { display: block; color: var(--muted); font-size: 12px; }
-  .checkrow input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--green); margin-top: 4px; }
-  .inlinectl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-  .inlinectl button { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; color: var(--muted); }
-  .inlinectl button:hover { border-color: var(--green); color: var(--green-deep); }
-  .inlinectl input[type=number] { width: 84px; padding: 5px 8px; }
-  .inlinectl .savebtn { background: var(--green); border-color: var(--green); color: #fff; font-weight: 600; }
-  #starbanner { margin-top: 10px; background: var(--sun-soft); color: var(--sun-ink); border-radius: 12px; padding: 10px 14px; font-weight: 700; text-align: center; font-size: 16px; }
+  /* weigh */
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #weightinput { width: 120px; font-size: 20px; font-weight: 600; text-align: center; }
+  .btn { border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 12px; padding: 10px 18px; font-weight: 700; }
+  .btn.ghost { background: var(--card); color: var(--muted); border-color: var(--line); font-weight: 500; }
+  #weightnote { font-size: 13px; color: var(--muted); }
+  #weightnote.down { color: var(--good-text); font-weight: 600; }
 
-  /* meters */
-  .meterrow { margin: 10px 0 2px; }
-  .meterrow .mlab { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 3px; gap: 8px; }
-  .meterrow .mlab b { font-weight: 600; }
-  .meterrow .mlab .praise { color: var(--sun-ink); font-weight: 600; }
-  .meterrow .mlab .over { color: var(--warn); font-weight: 600; }
-  .meter { height: 10px; background: var(--green-soft); border-radius: 999px; overflow: hidden; }
-  .meter .fill { height: 100%; background: var(--green); border-radius: 999px; transition: width .4s ease; }
-  .meter .fill.veg { background: var(--series-avg); }
-  .meter .fill.overfill { background: var(--warn); }
-  @media (prefers-reduced-motion: reduce) { .meter .fill { transition: none; } }
+  /* water */
+  .glasses { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .glass { width: 40px; height: 48px; border-radius: 10px 10px 14px 14px; border: 2px solid var(--water); background: var(--card); position: relative; overflow: hidden; padding: 0; transition: transform .1s; }
+  .glass:active { transform: scale(.94); }
+  .glass::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--water); opacity: .85; transition: height .25s ease; }
+  .glass.full::after { height: 100%; }
+  .glass span { position: relative; z-index: 1; font-size: 15px; }
+  #waternote { margin-top: 8px; }
 
-  /* meal cards */
-  .mealitem { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
-  .mealitem .iname { flex: 1; min-width: 0; }
-  .mealitem .iname small { display: block; color: var(--muted); font-size: 11.5px; }
-  .mealitem .qty { display: flex; align-items: center; gap: 4px; }
-  .mealitem .qty button { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--muted); font-size: 13px; line-height: 1; }
-  .mealitem .qty span { min-width: 26px; text-align: center; font-weight: 600; font-size: 13px; }
-  .mealitem .imac { font-size: 12px; color: var(--muted); white-space: nowrap; }
-  .mealitem .rm { border: none; background: none; color: var(--terracotta); font-size: 15px; padding: 2px 4px; }
-  .usualbtn { border: 1px dashed var(--green); background: none; color: var(--green-deep); border-radius: 999px; padding: 5px 14px; font-size: 13px; margin: 4px 0 2px; }
-  .usualbtn:hover { background: var(--green-soft); }
-  .addrow { display: flex; gap: 8px; margin-top: 10px; }
-  .addrow select { flex: 1; min-width: 0; }
-  .gstat { font-size: 13px; color: var(--muted); font-weight: 600; }
-  .psel { max-width: 150px; font-size: 12.5px; padding: 5px 6px; flex: none; }
-  .addrow button { border: 1px solid var(--green); background: var(--green); color: #fff; border-radius: 10px; padding: 7px 14px; font-weight: 600; }
-  .mealtotal { display: flex; justify-content: space-between; margin-top: 9px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; gap: 4px; }
-  .mealtotal b { color: var(--ink); font-weight: 600; }
+  /* food */
+  .foodrow { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+  #foodinput { flex: 1; min-width: 0; }
+  #micBtn { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); font-size: 20px; flex: none; box-shadow: var(--shadow); }
+  #micBtn.listening { background: var(--pink); border-color: var(--pink); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(194,81,126,.45);} 50% { box-shadow: 0 0 0 12px rgba(194,81,126,0);} }
+  @media (prefers-reduced-motion: reduce) { #micBtn.listening { animation: none; } }
+  #foodhint { margin-top: 6px; }
+  #foodlist { margin-top: 10px; }
+  .fitem { display: flex; gap: 8px; align-items: flex-start; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 14.5px; }
+  .fitem:last-child { border-bottom: none; }
+  .fitem .t { font-size: 11.5px; color: var(--muted); min-width: 60px; padding-top: 3px; }
+  .fitem .txt { flex: 1; }
+  .fitem .rm { border: none; background: none; color: var(--pink); font-size: 15px; padding: 0 4px; }
 
-  /* stat tiles */
+  /* feel */
+  .feelrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .feelrow .fl { font-size: 12.5px; color: var(--muted); width: 48px; }
+  .pips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pips button { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; font-size: 15px; color: var(--ink); }
+  .pips button.on { background: var(--accent-soft); border-color: var(--accent); }
+  .miclite { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); font-size: 17px; flex: none; }
+  .miclite.listening { background: var(--pink); border-color: var(--pink); }
+  #noteinput { flex: 1; min-width: 0; }
+
+  /* journey */
   .tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-  .tile { background: var(--card); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow); }
-  .tile .label { font-size: 11.5px; color: var(--muted); letter-spacing: .02em; }
-  .tile .val { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .tile { background: var(--card); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+  .tile .label { font-size: 11.5px; color: var(--muted); }
+  .tile .val { font-size: 21px; font-weight: 700; margin-top: 2px; }
   .tile .val small { font-size: 12px; font-weight: 400; color: var(--muted); }
-  .tile .sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-  .tile .sub.goodsub { color: var(--good-text); font-weight: 600; }
-  @media (max-width: 480px) { .tiles { grid-template-columns: 1fr; } }
-
-  /* chart */
+  .tile .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .tile .sub.good { color: var(--good-text); font-weight: 600; }
   #chartwrap { position: relative; }
   #chart { width: 100%; height: auto; display: block; }
-  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
   .legend .li { display: flex; align-items: center; gap: 6px; }
   .legend .sw { width: 14px; height: 3px; border-radius: 2px; }
   .legend .sw.dot { width: 9px; height: 9px; border-radius: 50%; }
   #tooltip { position: absolute; pointer-events: none; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 10px; padding: 6px 10px; font-size: 12px; display: none; z-index: 5; white-space: nowrap; }
-  #tooltip b { font-weight: 600; }
-  .tablebtn { border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 4px 12px; font-size: 12px; }
-  #wtable { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-  #wtable th, #wtable td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-  #wtable th:first-child, #wtable td:first-child { text-align: left; }
-  #wtable th { color: var(--muted); font-weight: 600; font-size: 11.5px; }
-
-  /* star strip */
-  .starstrip { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .starstrip { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .starstrip .sday { width: 34px; text-align: center; }
-  .starstrip .sday .s { font-size: 18px; filter: grayscale(1) opacity(.35); }
+  .starstrip .sday .s { font-size: 18px; filter: grayscale(1) opacity(.3); }
   .starstrip .sday.won .s { filter: none; }
   .starstrip .sday small { display: block; font-size: 9.5px; color: var(--muted); }
 
-  /* library */
-  .libgroup { margin-bottom: 10px; }
-  .libgroup h3 { font-size: 12.5px; color: var(--muted); margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .05em; }
-  .librow { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--line); font-size: 13.5px; }
-  .librow .lname { flex: 1; min-width: 0; }
-  .librow .lname small { color: var(--muted); font-size: 11.5px; }
-  .librow .lmac { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
-  .librow button { border: none; background: none; font-size: 14px; padding: 2px 4px; }
-  .librow .ed { color: var(--green-deep); }
-  .librow .del { color: var(--terracotta); }
-  #compform { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-  #compform .full { grid-column: 1 / -1; }
-  #compform label { font-size: 11.5px; color: var(--muted); display: block; margin-bottom: 2px; }
-  #compform input { width: 100%; }
-  .groupchecks { display: flex; gap: 10px; flex-wrap: wrap; }
-  .groupchecks label { display: flex; align-items: center; gap: 4px; color: var(--ink); font-size: 12.5px; }
-  .formbtns { display: flex; gap: 8px; grid-column: 1 / -1; }
-  .formbtns button { border-radius: 10px; padding: 8px 16px; font-weight: 600; border: 1px solid var(--line); background: var(--card); color: var(--muted); }
-  .formbtns button.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  /* settings */
+  #settings .row { margin-top: 6px; }
+  #settings input { width: 80px; }
+  .backbtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .backbtns button, .backbtns label { border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
+  #toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 13px; box-shadow: var(--shadow); opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 20; max-width: 90vw; text-align: center; }
+  #toast.show { opacity: 1; }
   footer { text-align: center; margin-top: 24px; font-size: 11.5px; color: var(--muted); }
 </style>
 </head>
@@ -235,17 +159,13 @@
 <main>
   <header>
     <div class="title-row"><span class="star">⭐</span><h1>Star Day</h1></div>
-    <p class="tagline">boring meals · gold stars · private, on this Mac only</p>
-    <button id="gearBtn" aria-label="Targets and backup">⚙</button>
+    <p class="tagline">weigh · say · sip · private, on this device only</p>
+    <button id="gearBtn" aria-label="Settings and backup">⚙</button>
   </header>
 
   <div class="card" id="settings" hidden>
-    <h2>Daily targets <span class="chip">gentle guides, not grades</span></h2>
-    <div class="setgrid">
-      <div><label>Calories</label><input id="s-cal" type="number" step="10"></div>
-      <div><label>Protein (g)</label><input id="s-protein" type="number"></div>
-      <div><label>Veg (oz)</label><input id="s-veg" type="number"></div>
-    </div>
+    <h2>Settings</h2>
+    <div class="row"><label class="small" for="s-water">Water goal (glasses/day)</label><input id="s-water" type="number" min="1" max="20"></div>
     <div class="backbtns">
       <button id="exportbtn">⬇ Back up (.json)</button>
       <label for="importfile">⬆ Restore from backup</label>
@@ -253,669 +173,316 @@
     </div>
   </div>
 
-  <nav>
-    <button data-tab="today" class="active">Today</button>
-    <button data-tab="progress">Progress</button>
-    <button data-tab="library">Library</button>
-  </nav>
+  <div class="datenav">
+    <button id="prevday" aria-label="Previous day">‹</button>
+    <div class="dlabel" id="daylabel"></div>
+    <button id="nextday" aria-label="Next day">›</button>
+  </div>
+  <div id="starline"></div>
 
-  <!-- ══════════ TODAY ══════════ -->
-  <section id="tab-today">
-    <div class="datenav">
-      <button id="prevday" aria-label="Previous day">‹</button>
-      <div class="dlabel" id="daylabel"></div>
-      <button id="nextday" aria-label="Next day">›</button>
+  <div class="card">
+    <h2>⚖️ Weigh in</h2>
+    <div class="row">
+      <input type="number" id="weightinput" step="0.1" inputmode="decimal" placeholder="lbs">
+      <button class="btn" id="saveweight">Save</button>
+      <span id="weightnote"></span>
     </div>
+  </div>
 
-    <div class="card" id="starcard">
-      <h2>The three <span class="chip" id="starchip"></span></h2>
-      <div id="checklist"></div>
-      <div id="starbanner" hidden></div>
-    </div>
+  <div class="card">
+    <h2>💧 Water <span class="chip" id="waterchip"></span></h2>
+    <div class="glasses" id="glasses"></div>
+    <div class="small" id="waternote"></div>
+  </div>
 
-    <div class="card">
-      <h2>Day totals</h2>
-      <div id="daymeters"></div>
+  <div class="card">
+    <h2>🥣 What I ate <span class="chip" id="foodchip"></span></h2>
+    <div class="foodrow">
+      <button id="micBtn" aria-label="Talk">🎙️</button>
+      <input type="text" id="foodinput" placeholder="talk or type… e.g. eggs and toast, big salad, tofu bowl" autocomplete="off">
+      <button class="btn ghost" id="addfood">Add</button>
     </div>
+    <div class="small" id="foodhint">tap the mic and just say it — each thing you mention becomes a line</div>
+    <div id="foodlist"></div>
+  </div>
 
-    <div id="mealcards"></div>
-  </section>
+  <div class="card">
+    <h2>💜 How I felt <span class="chip">optional · one tap each</span></h2>
+    <div class="feelrow"><span class="fl">mood</span><div class="pips" data-k="mood">
+      <button data-v="1">😞</button><button data-v="2">😕</button><button data-v="3">😐</button><button data-v="4">🙂</button><button data-v="5">😄</button></div></div>
+    <div class="feelrow"><span class="fl">energy</span><div class="pips" data-k="energy">
+      <button data-v="1">🪫 low</button><button data-v="2">🔋 ok</button><button data-v="3">⚡ high</button></div></div>
+    <div class="feelrow"><span class="fl">sleep</span><div class="pips" data-k="sleep">
+      <button data-v="1">😴 rough</button><button data-v="2">🙂 ok</button><button data-v="3">✨ great</button></div></div>
+    <div class="foodrow" style="margin-top:10px">
+      <button id="noteMic" class="miclite" aria-label="Talk">🎙️</button>
+      <input type="text" id="noteinput" placeholder="anything else — cravings, stress, a walk, your cycle…" autocomplete="off">
+    </div>
+    <div class="small" id="notehint">saves as you go</div>
+  </div>
 
-  <!-- ══════════ PROGRESS ══════════ -->
-  <section id="tab-progress" hidden>
-    <div class="tiles" id="progtiles"></div>
-    <div class="card">
-      <h2>Your journey <button class="tablebtn" id="toggletable">table view</button></h2>
-      <div class="legend">
-        <span class="li"><span class="sw dot" style="background:var(--series-weight)"></span>weigh-ins</span>
-        <span class="li"><span class="sw" style="background:var(--series-avg)"></span>7-day average — the truth</span>
-      </div>
-      <div id="chartwrap">
-        <svg id="chart" viewBox="0 0 640 300" role="img" aria-label="Weight over time"></svg>
-        <div id="tooltip"></div>
-      </div>
-      <div id="tablewrap" hidden></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="card">
+    <h2>Your journey</h2>
+    <div class="legend">
+      <span class="li"><span class="sw dot" style="background:var(--series-weight)"></span>weigh-ins</span>
+      <span class="li"><span class="sw" style="background:var(--series-avg)"></span>7-day average — the truth</span>
     </div>
-    <div class="card">
-      <h2>Star history <span class="chip" id="starcount"></span></h2>
-      <div class="starstrip" id="starstrip"></div>
+    <div id="chartwrap">
+      <svg id="chart" viewBox="0 0 640 260" role="img" aria-label="Weight over time"></svg>
+      <div id="tooltip"></div>
     </div>
-  </section>
+    <div class="starstrip" id="starstrip"></div>
+  </div>
 
-  <!-- ══════════ LIBRARY ══════════ -->
-  <section id="tab-library" hidden>
-    <div class="card">
-      <h2>Components</h2>
-      <div class="small">Your building blocks. Edit ✎ or delete ✕ anything; add your own below. Macros are per serving.</div>
-      <div id="liblist"></div>
-    </div>
-    <div class="card">
-      <h2 id="formtitle">Add a component</h2>
-      <div id="compform">
-        <div class="full"><label>Name</label><input id="cf-name" placeholder="e.g. Butternut soup"></div>
-        <div class="full"><label>Serving size</label><input id="cf-serving" placeholder="e.g. 1 cup"></div>
-        <div><label>Calories</label><input id="cf-cal" type="number" inputmode="decimal"></div>
-        <div><label>Protein (g)</label><input id="cf-p" type="number" inputmode="decimal"></div>
-        <div><label>Fat (g)</label><input id="cf-f" type="number" inputmode="decimal"></div>
-        <div><label>Carbs (g)</label><input id="cf-c" type="number" inputmode="decimal"></div>
-        <div><label>Fiber (g)</label><input id="cf-fib" type="number" inputmode="decimal"></div>
-        <div><label>Veg (oz) it contains</label><input id="cf-veg" type="number" inputmode="decimal" placeholder="0"></div>
-        <div class="full"><label>Shows up in</label>
-          <div class="groupchecks" id="cf-groups"></div>
-        </div>
-        <div class="formbtns">
-          <button class="primary" id="cf-save">Save component</button>
-          <button id="cf-cancel" hidden>Cancel edit</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer>Star Day v2 · updated Aug 10 · made with Claude Code · your data never leaves this browser</footer>
+  <footer>Star Day v3 · updated Aug 17 · made with Claude Code · your data never leaves this device</footer>
 </main>
+<div id="toast"></div>
 
 <script>
 'use strict';
-/* ───────────────────────── helpers ───────────────────────── */
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-const KEY = 'starday.v1';
-const GROUPS = [
-  ['breakfast','Breakfast'], ['lunch','Lunch'], ['legume','Dinner · Legume'],
-  ['protein','Dinner · Protein'], ['starch','Dinner · Starch'], ['adds','Dinner · Adds'],
-  ['snacks','Snacks']
-];
-const MEALS = [
-  ['breakfast','🍳 Breakfast', ['breakfast']],
-  ['lunch','🥤 Lunch', ['lunch']],
-  ['dinner','🥣 Dinner bowl', ['legume','protein','starch','adds']],
-  ['snacks','🥜 Snacks', ['snacks']]
-];
-const SPLIT = { breakfast:.20, lunch:.30, dinner:.35, snacks:.15 };
+const KEY = 'starday.v3', OLD_KEY = 'starday.v1';
 
-function todayISO(){ const d=new Date(); return isoOf(d); }
+function todayISO(){ return isoOf(new Date()); }
 function isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function dateOf(iso){ const [y,m,dd]=iso.split('-').map(Number); return new Date(y,m-1,dd); }
 function addDays(iso,n){ const d=dateOf(iso); d.setDate(d.getDate()+n); return isoOf(d); }
-function niceDate(iso){ const d=dateOf(iso); return d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
+function niceDate(iso){ return dateOf(iso).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
+function nowTime(){ return new Date().toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }
 function r1(n){ return Math.round(n*10)/10; }
 function daysBetween(a,b){ return Math.round((dateOf(b)-dateOf(a))/86400000); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let toastT; function showToast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600); }
 
-/* ───────────────────────── seed data ───────────────────────── */
-/* Portion menus: [label, factor-of-base-serving]. Components without a menu
-   fall back to GENERIC_UNITS. Factors multiply the component's macros. */
-const GENERIC_UNITS = [['½ serving',0.5],['1 serving',1],['1½ servings',1.5],['2 servings',2],['3 servings',3]];
-const UNIT_MENUS = {
-  egg:         [['1 egg',1],['2 eggs',2],['3 eggs',3]],
-  eggwhites:   [['¼ cup',1],['½ cup',2],['¾ cup',3]],
-  hbegg:       [['1 egg',1],['2 eggs',2]],
-  nooch:       [['1 tbsp',0.5],['2 tbsp — usual',1],['3 tbsp',1.5]],
-  shake:       [['half shake',0.5],['full shake — usual',1]],
-  tofuscramble:[['½ cup',0.6],['heaping ¾ cup — usual',1],['1 cup',1.2],['1½ cups',1.8]],
-  garlicyog:   [['1 tbsp',0.25],['2 tbsp',0.5],['4 tbsp (¼ cup) — usual',1],['½ cup',2]],
-  hummus:      [['1 tbsp',0.5],['2 tbsp — usual',1],['4 tbsp (¼ cup)',2]],
-  potato:      [['2–3 babies',0.5],['4–5 babies — usual',1],['6–7 babies',1.5],['8–10 babies',2]],
-  sweetpot:    [['half',0.5],['1 medium — usual',1],['1 large',1.5]],
-  rice:        [['½ cup',0.67],['¾ cup — usual',1],['1 cup',1.33],['1½ cups',2]],
-  dal:         [['½ cup',0.5],['1 cup — usual',1],['1½ cups',1.5],['2 cups',2]],
-  chana:       [['½ cup',0.5],['1 cup — usual',1],['1½ cups',1.5],['2 cups',2]],
-  mexbeans:    [['½ cup',0.5],['1 cup — usual',1],['1½ cups',1.5],['2 cups',2]],
-  plateveg:    [['half plate',0.5],['full plate — usual',1],['heaping plate',1.5]],
-  frozveg:     [['1 cup',0.67],['1½ cups — usual',1],['2 cups',1.33],['3 cups',2]],
-  tofu:        [['half portion',0.5],['5–6 oz — usual',1],['1½ portions',1.5]],
-  tempeh:      [['3 oz',0.5],['6 oz — usual',1]],
-  greekyog:    [['half pot-cup',0.5],['170 g cup — usual',1]]
-};
-function seedComponents(){ const list = [
-  {id:'egg',       name:'Egg',                      serving:'1 large',            cal:70,  p:6,   f:5,  c:0.5, fib:0,  veg:0,   groups:['breakfast']},
-  {id:'eggwhites', name:'Egg whites',               serving:'¼ cup (≈2 whites)',  cal:35,  p:7,   f:0,  c:1,   fib:0,  veg:0,   groups:['breakfast']},
-  {id:'scramble2', name:'2-Egg Scramble',           serving:'2 eggs + veg + kraut',cal:220, p:12,  f:9,  c:5,   fib:1,  veg:3,   groups:['breakfast']},
-  {id:'kraut',     name:'Sauerkraut',               serving:'½ cup',              cal:20,  p:1,   f:0,  c:4,   fib:2,  veg:2.5, servG:71,  groups:['breakfast','adds']},
-  {id:'sautveg',   name:'Sautéed veg (no oil)',     serving:'1 cup',              cal:50,  p:2,   f:0,  c:10,  fib:3,  veg:4,   servG:120, groups:['breakfast','adds']},
-  {id:'nooch',     name:'Nutritional yeast',        serving:'2 tbsp',             cal:60,  p:8,   f:1,  c:5,   fib:3,  veg:0,   groups:['breakfast','adds']},
-  {id:'greekyog',  name:'Greek yogurt, plain nonfat',serving:'170 g cup',         cal:90,  p:16,  f:0,  c:6,   fib:0,  veg:0,   groups:['breakfast','snacks']},
-  {id:'shake',     name:'Full Protein Shake',       serving:'your usual recipe',  cal:522, p:38,  f:21, c:44,  fib:6,  veg:1,   groups:['lunch']},
-  {id:'peaprotein',name:'Pea protein',              serving:'¼ cup',              cal:120, p:24,  f:2,  c:1,   fib:0,  veg:0,   groups:['lunch']},
-  {id:'berries',   name:'Frozen berries',           serving:'½ cup',              cal:35,  p:0,   f:0,  c:9,   fib:2,  veg:0,   groups:['lunch']},
-  {id:'banana',    name:'Banana',                   serving:'1 medium',           cal:105, p:1,   f:0,  c:27,  fib:3,  veg:0,   groups:['lunch','snacks']},
-  {id:'pb',        name:'Peanut butter',            serving:'1.5 tbsp',           cal:140, p:6,   f:12, c:5,   fib:1,  veg:0,   groups:['lunch']},
-  {id:'hemp',      name:'Hemp hearts',              serving:'1 tbsp',             cal:55,  p:3,   f:4,  c:1,   fib:0.5,veg:0,   groups:['lunch']},
-  {id:'soymilk',   name:'Soy milk, unsweetened',    serving:'1 cup',              cal:100, p:7,   f:4,  c:8,   fib:1,  veg:0,   groups:['lunch']},
-  {id:'spinach',   name:'Spinach',                  serving:'1 cup',              cal:7,   p:1,   f:0,  c:1,   fib:1,  veg:1,   groups:['lunch','adds']},
-  {id:'dal',       name:'Dal',                      serving:'1 cup',              cal:230, p:14,  f:4,  c:36,  fib:8,  veg:0,   servG:240, groups:['legume']},
-  {id:'chana',     name:'Chana Masala',             serving:'1–1¼ cup',           cal:215, p:9,   f:7,  c:26,  fib:7,  veg:0,   servG:280, groups:['legume']},
-  {id:'mexbeans',  name:'Mexican Beans',            serving:'1 cup',              cal:275, p:15,  f:5,  c:45,  fib:11, veg:0,   servG:260, groups:['legume']},
-  {id:'edamame',   name:'Edamame',                  serving:'¾ cup shelled',      cal:150, p:13.5,f:5,  c:11,  fib:5,  veg:0,   servG:115, groups:['legume','snacks']},
-  {id:'tofu',      name:'Baked Tofu',               serving:'5–6 oz',             cal:215, p:23,  f:13, c:4,   fib:1,  veg:0,   servG:155, groups:['protein']},
-  {id:'tempeh',    name:'Tempeh',                   serving:'6 oz',               cal:340, p:34,  f:18, c:15,  fib:9,  veg:0,   servG:170, groups:['protein']},
-  {id:'soycurls',  name:'Soy Curls',                serving:'1 cup rehydrated',   cal:200, p:22,  f:6,  c:14,  fib:4,  veg:0,   servG:130, groups:['protein']},
-  {id:'soychorizo',name:'Soy Chorizo',              serving:'2.5 oz',             cal:160, p:10,  f:11, c:8,   fib:0,  veg:0,   servG:71,  groups:['protein']},
-  {id:'tofuscramble',name:'Tofu Scramble (your batch)',serving:'heaping ¾ cup', cal:275, p:28.5,f:13.5,c:10.5,fib:1.5,veg:1,  servG:200, groups:['protein']},
-  {id:'garlicyog', name:'Garlic Yogurt Sauce',      serving:'4 tbsp (¼ cup)',   cal:60,  p:5,   f:3,  c:2.5, fib:0,  veg:0,   servG:60,  groups:['adds','snacks']},
-  {id:'potato',    name:'Boiled Potato',            serving:'4–5 baby potatoes', cal:130, p:3, f:0, c:30, fib:3, veg:0, servG:150, groups:['starch']},
-  {id:'sweetpot',  name:'Sweet Potato',             serving:'1 medium',           cal:105, p:2,   f:0,  c:24,  fib:4,  veg:0,   servG:130, groups:['starch']},
-  {id:'rice',      name:'Cooked Rice',              serving:'¾ cup',              cal:155, p:3,   f:0,  c:33,  fib:1,  veg:0,   servG:140, groups:['starch']},
-  {id:'roastveg',  name:'Roasted Veg / Salad',      serving:'1–1.5 cup',          cal:90,  p:3,   f:3,  c:12,  fib:4,  veg:6,   servG:170, groups:['adds']},
-  {id:'frozveg',   name:'Frozen veg, steamed',      serving:'1.5 cup',            cal:80,  p:4,   f:0,  c:14,  fib:5,  veg:7,   servG:200, groups:['adds']},
-  {id:'plateveg',  name:'Plateful of Veggies',      serving:'a full dinner plate, any mix', cal:100, p:5, f:1, c:18, fib:7, veg:9, groups:['adds']},
-  {id:'tzatziki',  name:'Tzatziki',                 serving:'⅓ cup',              cal:100, p:5,   f:8,  c:3,   fib:0,  veg:0,   servG:80,  groups:['adds']},
-  {id:'hbegg',     name:'Hard-Boiled Egg',          serving:'1 egg',              cal:70,  p:6,   f:5,  c:0.5, fib:0,  veg:0,   groups:['snacks']},
-  {id:'hummus',    name:'Hummus (homemade)',        serving:'2 tbsp',             cal:62,  p:2.7, f:2.7,c:7.5, fib:2,  veg:0,   servG:30,  groups:['snacks','adds']},
-  {id:'hummusveg', name:'Hummus + Veg',             serving:'2 tbsp + veg',       cal:100, p:4,   f:6,  c:10,  fib:3,  veg:3,   groups:['snacks']},
-  {id:'chiapud',   name:'Chia Pudding',             serving:'your usual recipe',  cal:540, p:26,  f:35, c:34,  fib:15, veg:0,   groups:['snacks','breakfast']}
-];
-  for(const c of list){ if(UNIT_MENUS[c.id]) c.units = UNIT_MENUS[c.id]; }
-  return list;
+/* ───────── state + migration ───────── */
+function defaultState(){ return { v:3, settings:{ waterGoal:8 }, days:{} }; }
+function migrateOld(old){
+  const s = defaultState();
+  const comps = old.components || [];
+  const nameOf = id => (comps.find(c=>c.id===id)||{}).name || id;
+  for(const iso in (old.days||{})){
+    const od = old.days[iso];
+    const d = { weight: od.weight ?? null, water: 0, food: [] };
+    if(od.meals){
+      const labels = {breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snacks:'Snacks'};
+      for(const m in od.meals){
+        const items = (od.meals[m]||[]).map(it=>{
+          const n = nameOf(it.cid);
+          if(it.g!=null) return `${n} (${it.g} g)`;
+          return it.qty && it.qty!==1 ? `${n} ×${it.qty}` : n;
+        });
+        if(items.length) d.food.push({t:labels[m]||m, text: items.join(', ')});
+      }
+    }
+    if(d.weight!=null || d.food.length) s.days[iso] = d;
+  }
+  return s;
 }
-
-function defaultState(){ return {
-  settings: { targets:{ cal:1300, protein:100, veg:16 } },
-  components: seedComponents(),
-  days: {}
-};}
-
-let state = load();
 function load(){
   try {
     const raw = localStorage.getItem(KEY);
-    if(!raw) return defaultState();
-    const s = JSON.parse(raw);
-    if(!s.components || !s.days) return defaultState();
-    // migrate from v1 (goal tab removed; three targets only)
-    const t = (s.settings && s.settings.targets) || {};
-    s.settings = { targets: {
-      cal: (t.cal === 1550 ? 1300 : t.cal) || 1300,
-      protein: (t.protein === 110 ? 100 : t.protein) || 100,
-      veg: t.veg || 16
-    }};
-    // migrate to v2.1 weigh mode: add serving weights to existing components,
-    // and insert components new since v2 (deletions she made stay deleted)
-    const NEW_IN_V21 = ['hummus','tofuscramble','garlicyog','plateveg'];
-    for(const seed of seedComponents()){
-      const mine = s.components.find(c=>c.id===seed.id);
-      if(!mine){ if(NEW_IN_V21.includes(seed.id)) s.components.push(seed); }
-      else {
-        if(seed.servG && !mine.servG) mine.servG = seed.servG;
-        if(seed.units && !mine.units) mine.units = seed.units;
-      }
-    }
-    // clearer serving labels — each row maps one older default to the current
-    // one, so any past version reaches the final label; her own edits are kept
-    const RELABEL = [
-      ['tofuscramble','1 scoop (200 g)','heaping ¾ cup'],
-      ['tofuscramble','200 g ≈ heaping ¾ cup','heaping ¾ cup'],
-      ['garlicyog','dollop (60 g)','4 tbsp (¼ cup)'],
-      ['garlicyog','60 g = 4 tbsp (¼ cup)','4 tbsp (¼ cup)'],
-      ['potato','1 medium','4–5 baby potatoes'],
-      ['potato','150 g ≈ 4–5 baby potatoes','4–5 baby potatoes'],
-      ['hummus','2 tbsp (30 g)','2 tbsp']
-    ];
-    for(const [id, from, to] of RELABEL){
-      const mine = s.components.find(c=>c.id===id);
-      if(mine && mine.serving === from) mine.serving = to;
-    }
-    // store-bought hummus → her homemade recipe (only if she hasn't edited it)
-    const hum = s.components.find(c=>c.id==='hummus');
-    if(hum && hum.name === 'Hummus' && hum.cal === 70){
-      Object.assign(hum, {name:'Hummus (homemade)', cal:62, p:2.7, f:2.7, c:7.5, fib:2});
-    }
-    return s;
-  } catch(e){ return defaultState(); }
+    if(raw){ const s = JSON.parse(raw); if(s && s.v===3 && s.days) return s; }
+    const oldRaw = localStorage.getItem(OLD_KEY);
+    if(oldRaw){ const s = migrateOld(JSON.parse(oldRaw)); localStorage.setItem(KEY, JSON.stringify(s)); return s; }
+  } catch(e){}
+  return defaultState();
 }
+let state = load();
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
-
 let viewDate = todayISO();
-let editingId = null;
-
 function day(iso){
-  if(!state.days[iso]) state.days[iso] = { meals:{breakfast:[],lunch:[],dinner:[],snacks:[]}, photos:false, weight:null, extraVeg:0 };
-  return state.days[iso];
-}
-function comp(id){ return state.components.find(c=>c.id===id); }
-function lastLogged(mkey){
-  let iso = addDays(viewDate,-1);
-  for(let i=0;i<30;i++){
-    const d = state.days[iso];
-    if(d && d.meals[mkey] && d.meals[mkey].length) return d.meals[mkey];
-    iso = addDays(iso,-1);
-  }
-  return null;
+  if(!state.days[iso]) state.days[iso] = { weight:null, water:0, food:[] };
+  const d = state.days[iso]; if(!d.food) d.food=[]; if(d.water==null) d.water=0;
+  return d;
 }
 
-/* ───────────────────────── math ───────────────────────── */
-function itemFactor(it, c){
-  // weighed item: grams ÷ grams-per-serving; counted item: number of servings
-  return (it.g != null && c.servG) ? it.g / c.servG : (it.qty || 0);
-}
-function mealTotals(d, meal){
-  const t = {cal:0,p:0,f:0,c:0,fib:0,veg:0};
-  for(const it of d.meals[meal]||[]){
-    const c = comp(it.cid); if(!c) continue;
-    const f = itemFactor(it, c);
-    t.cal+=c.cal*f; t.p+=c.p*f; t.f+=c.f*f; t.c+=c.c*f; t.fib+=c.fib*f; t.veg+=(c.veg||0)*f;
-  }
-  return t;
-}
-function dayTotals(d){
-  const t = {cal:0,p:0,f:0,c:0,fib:0,veg:d.extraVeg||0};
-  for(const [m] of MEALS){ const mt = mealTotals(d,m); for(const k in mt) t[k]+= (k==='veg'? mt.veg : mt[k]); }
-  return t;
-}
-function isStar(d){
-  const t = dayTotals(d);
-  return t.veg >= state.settings.targets.veg && d.photos && d.weight != null;
-}
-function starDates(){
-  return Object.keys(state.days).filter(iso => isStar(state.days[iso])).sort();
-}
+/* ───────── math ───────── */
+function isStar(d){ return d && d.weight!=null && d.food.length>0 && d.water >= state.settings.waterGoal; }
+function starDates(){ return Object.keys(state.days).filter(iso=>isStar(state.days[iso])).sort(); }
 function streak(){
   let n=0, iso=todayISO();
-  if(!(state.days[iso] && isStar(state.days[iso]))) iso = addDays(iso,-1); // today not done yet doesn't break it
-  while(state.days[iso] && isStar(state.days[iso])){ n++; iso=addDays(iso,-1); }
+  if(!isStar(state.days[iso])) iso=addDays(iso,-1);
+  while(isStar(state.days[iso])){ n++; iso=addDays(iso,-1); }
   return n;
 }
-function weightSeries(){
-  return Object.keys(state.days)
-    .filter(iso => state.days[iso].weight != null)
-    .sort()
-    .map(iso => ({iso, w: state.days[iso].weight}));
-}
-function rolling7(series){
-  return series.map(pt => {
-    const win = series.filter(q => daysBetween(q.iso, pt.iso) >= 0 && daysBetween(q.iso, pt.iso) < 7);
-    return {iso: pt.iso, w: win.reduce((a,q)=>a+q.w,0)/win.length};
-  });
-}
+function weightSeries(){ return Object.keys(state.days).filter(iso=>state.days[iso].weight!=null).sort().map(iso=>({iso,w:state.days[iso].weight})); }
+function rolling7(series){ return series.map(pt=>{ const win=series.filter(q=>daysBetween(q.iso,pt.iso)>=0 && daysBetween(q.iso,pt.iso)<7); return {iso:pt.iso, w:win.reduce((a,q)=>a+q.w,0)/win.length}; }); }
 
-/* ───────────────────────── tabs + settings ───────────────────────── */
-$$('nav button').forEach(b => b.onclick = () => {
-  $$('nav button').forEach(x=>x.classList.toggle('active', x===b));
-  ['today','progress','library'].forEach(t => $('#tab-'+t).hidden = (b.dataset.tab!==t));
-  render();
-});
-function activeTab(){ return $('nav button.active').dataset.tab; }
-
-$('#gearBtn').onclick = ()=>{
-  const p = $('#settings');
-  p.hidden = !p.hidden;
-  if(!p.hidden){
-    const T = state.settings.targets;
-    $('#s-cal').value=T.cal; $('#s-protein').value=T.protein; $('#s-veg').value=T.veg;
-  }
-};
-[['#s-cal','cal'],['#s-protein','protein'],['#s-veg','veg']].forEach(([id,key])=>{
-  $(id).addEventListener('input', ()=>{
-    const v = parseFloat($(id).value);
-    if(!isNaN(v) && v>0){ state.settings.targets[key]=v; save(); render(); }
-  });
-});
-
-/* ───────────────────────── render: today ───────────────────────── */
-function renderToday(){
-  const iso = viewDate, d = day(iso), T = state.settings.targets;
-  $('#daylabel').textContent = (iso===todayISO() ? 'Today · ' : '') + niceDate(iso);
+/* ───────── render ───────── */
+function render(){
+  const iso = viewDate, d = day(iso), G = state.settings.waterGoal;
+  $('#daylabel').textContent = (iso===todayISO()?'Today · ':'') + niceDate(iso);
   $('#nextday').disabled = iso >= todayISO();
 
-  // the three
-  const t = dayTotals(d);
-  const vegDone = t.veg >= T.veg;
-  $('#checklist').innerHTML = `
-    <div class="checkrow ${vegDone?'done':''}">
-      <div class="mark">${vegDone?'✓':'🥦'}</div>
-      <div class="what">Eat 1 lb of veggies<small>${r1(t.veg)} / ${T.veg} oz — meals count automatically; loose veg below</small>
-        <div class="inlinectl">
-          <button data-veg="3">+ handful (3 oz)</button><button data-veg="5">+ half plate (5 oz)</button><button data-veg="9">+ plateful (9 oz)</button>
-          ${d.extraVeg?`<button data-veg="reset">reset (${r1(d.extraVeg)} oz extra)</button>`:''}
-        </div>
-      </div>
-    </div>
-    <div class="checkrow ${d.photos?'done':''}">
-      <div class="mark">${d.photos?'✓':'📷'}</div>
-      <div class="what">Photograph your meals<small>snap them on your phone, then check this off</small></div>
-      <input type="checkbox" id="photocheck" ${d.photos?'checked':''} aria-label="Photos taken">
-    </div>
-    <div class="checkrow ${d.weight!=null?'done':''}">
-      <div class="mark">${d.weight!=null?'✓':'⚖️'}</div>
-      <div class="what">Weigh yourself<small id="weightnote">${d.weight!=null?d.weight+' lbs logged':'first thing in the morning works best'}</small>
-        <div class="inlinectl">
-          <input type="number" id="weightinput" step="0.1" inputmode="decimal" placeholder="lbs" value="${d.weight ?? ''}">
-          <button class="savebtn" id="saveweight">Save</button>
-        </div>
-      </div>
-    </div>`;
-  const star = isStar(d);
-  const sk = streak();
-  $('#starbanner').hidden = !star;
-  $('#starbanner').textContent = star ? (sk>=3 ? `⭐ Star Day! 🔥 ${sk} in a row.` : '⭐ Star Day! All three done.') : '';
-  const doneCount = [vegDone, d.photos, d.weight!=null].filter(Boolean).length;
-  $('#starchip').textContent = star ? '⭐ earned' : `${doneCount} of 3`;
-  $('#photocheck').onchange = (ev)=>{ d.photos = ev.target.checked; save(); render(); };
-  $('#saveweight').onclick = ()=>{
-    const v = parseFloat($('#weightinput').value);
-    d.weight = isNaN(v) ? null : v;
-    save(); render();
-  };
-  $$('#checklist [data-veg]').forEach(b => b.onclick = ()=>{
-    const v = b.dataset.veg;
-    if(v==='reset') d.extraVeg = 0; else d.extraVeg = r1((d.extraVeg||0) + Number(v));
-    save(); render();
-  });
+  // star line
+  const won = isStar(d);
+  const sl = $('#starline');
+  sl.className = won ? 'won' : '';
+  sl.innerHTML = won
+    ? `⭐ Star Day!${streak()>=3?` 🔥 ${streak()} in a row`:''}`
+    : `<span class="d ${d.weight!=null?'on':''}">⚖️</span> · <span class="d ${d.food.length?'on':''}">🥣</span> · <span class="d ${d.water>=G?'on':''}">💧</span> <span class="small">— all three = ⭐</span>`;
 
-  // the three meters
-  const meters = [
-    {lab:'Calories', val:t.cal, max:T.cal, unit:''},
-    {lab:'Protein', val:t.p, max:T.protein, unit:'g', praise:true},
-    {lab:'Veg', val:t.veg, max:T.veg, unit:'oz', veg:true}
-  ];
-  $('#daymeters').innerHTML = meters.map(m=>{
-    const pct = Math.min(m.val/m.max*100,100);
-    const over = m.lab==='Calories' && m.val > m.max*1.1;
-    const close = m.praise && m.val >= m.max*0.85;
-    return `<div class="meterrow">
-      <div class="mlab"><span>${m.lab}</span><span>${close?'<span class="praise">✨ '+(m.val>=m.max?'hit it!':'close enough — incredible')+'</span> ':''}<b>${r1(m.val)}</b> / ${m.max}${m.unit} ${over?'<span class="over">⚠ over</span>':''}</span></div>
-      <div class="meter"><div class="fill ${m.veg?'veg':''} ${over?'overfill':''}" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-
-  // meal cards
-  $('#mealcards').innerHTML = MEALS.map(([mkey,mname,groups])=>{
-    const mt = mealTotals(d,mkey);
-    const calT = Math.round(T.cal*SPLIT[mkey]/5)*5;
-    const pT = Math.round(T.protein*SPLIT[mkey]);
-    const opts = groups.map(g=>{
-      const items = state.components.filter(c=>c.groups.includes(g));
-      if(!items.length) return '';
-      const glabel = (GROUPS.find(x=>x[0]===g)||[g,g])[1];
-      return `<optgroup label="${glabel}">` + items.map(c=>`<option value="${c.id}">${c.name} — ${c.serving}</option>`).join('') + `</optgroup>`;
-    }).join('');
-    const rows = (d.meals[mkey]||[]).map((it,idx)=>{
-      const c = comp(it.cid); if(!c) return '';
-      const f = itemFactor(it, c);
-      let ctl;
-      if(it.g != null && c.servG){
-        ctl = `<div class="qty"><span class="gstat">${it.g} g</span></div>`;
-      } else {
-        const units = c.units || GENERIC_UNITS;
-        let sizeOpts = units.map(u=>`<option value="${u[1]}" ${Math.abs(u[1]-it.qty)<0.01?'selected':''}>${u[0]}</option>`).join('');
-        if(!units.some(u=>Math.abs(u[1]-it.qty)<0.01)) sizeOpts = `<option value="${it.qty}" selected>× ${it.qty}</option>` + sizeOpts;
-        ctl = `<select class="psel" data-meal="${mkey}" data-idx="${idx}" aria-label="portion size">${sizeOpts}</select>`;
-      }
-      const sub = (it.g != null && c.servG) ? `weighed back when` : c.serving;
-      return `<div class="mealitem">
-        <div class="iname">${c.name}<small>${sub}</small></div>
-        ${ctl}
-        <div class="imac">${Math.round(c.cal*f)} cal · ${r1(c.p*f)}p</div>
-        <button class="rm" data-meal="${mkey}" data-idx="${idx}" data-act="rm" aria-label="remove">✕</button>
-      </div>`;
-    }).join('');
-    const usual = !rows && lastLogged(mkey);
-    return `<div class="card">
-      <h2>${mname} <span class="chip">guide ≈ ${calT} cal · ${pT}g protein</span></h2>
-      ${rows || `<div class="small">nothing yet — add a component below</div>${usual?`<button class="usualbtn" data-usual="${mkey}">↺ same as last time</button>`:''}`}
-      <div class="addrow">
-        <select id="sel-${mkey}">${opts}</select>
-        <button data-addmeal="${mkey}">Add</button>
-      </div>
-      <div class="mealtotal">
-        <span>this meal: <b>${Math.round(mt.cal)} cal</b> · <b>${r1(mt.p)}g</b> protein</span>
-        <span>${r1(mt.f)}g fat · ${r1(mt.c)}g carbs · ${r1(mt.fib)}g fiber${mt.veg?` · ${r1(mt.veg)} oz veg`:''}</span>
-      </div>
-    </div>`;
-  }).join('');
-
-  $$('#mealcards [data-addmeal]').forEach(b => b.onclick = ()=>{
-    const mkey = b.dataset.addmeal;
-    const sel = $('#sel-'+mkey);
-    if(!sel.value) return;
-    const list = day(viewDate).meals[mkey];
-    const existing = list.find(it=>it.cid===sel.value && it.g==null);
-    if(existing) existing.qty = r1(existing.qty+1); else list.push({cid:sel.value, qty:1});
-    save(); render();
-  });
-  $$('#mealcards [data-usual]').forEach(b => b.onclick = ()=>{
-    const items = lastLogged(b.dataset.usual);
-    if(items){ day(viewDate).meals[b.dataset.usual] = items.map(it=>({cid:it.cid, qty:it.qty})); save(); render(); }
-  });
-  $$('#mealcards [data-act]').forEach(b => b.onclick = ()=>{
-    const {meal, idx, act} = b.dataset;
-    const list = day(viewDate).meals[meal];
-    if(act==='rm' && list[+idx]){ list.splice(+idx,1); save(); render(); }
-  });
-  $$('#mealcards .psel').forEach(sel => sel.onchange = ()=>{
-    const it = day(viewDate).meals[sel.dataset.meal][+sel.dataset.idx];
-    if(!it) return;
-    const v = parseFloat(sel.value);
-    if(!isNaN(v) && v>0){ it.qty = v; save(); render(); }
-  });
-}
-$('#prevday').onclick = ()=>{ viewDate = addDays(viewDate,-1); render(); };
-$('#nextday').onclick = ()=>{ if(viewDate < todayISO()){ viewDate = addDays(viewDate,1); render(); } };
-
-/* ───────────────────────── render: progress ───────────────────────── */
-function renderProgress(){
+  // weight
+  $('#weightinput').value = d.weight ?? '';
   const series = weightSeries();
-  const avg = rolling7(series);
-  const latest = series[series.length-1];
-  const first = series[0];
-  const change = latest && first ? latest.w - first.w : 0;
-  const stars = starDates().length;
-  const weekAgoISO = addDays(todayISO(),-6);
-  const thisWeek = starDates().filter(iso => iso >= weekAgoISO).length;
-  const tiles = [
-    {label:'Current', val: latest? `${r1(latest.w)}<small> lbs</small>` : '—',
-     sub: latest && first && series.length>1 ? `${change<=0?'↓':'↑'} ${r1(Math.abs(change))} lbs since your first weigh-in` : 'weigh in to start your line', good: change<0 && series.length>1},
-    {label:'Stars', val:`${stars} ⭐`, sub:`${thisWeek} of the last 7 days`},
-    {label:'Streak', val:`${streak()}<small> days</small>`, sub: streak()>=3 ? '🔥 keep it rolling' : 'three in a row starts a fire'}
-  ];
-  $('#progtiles').innerHTML = tiles.map(t=>`
-    <div class="tile"><div class="label">${t.label}</div><div class="val">${t.val}</div><div class="sub ${t.good?'goodsub':''}">${t.sub}</div></div>`).join('');
+  const prev = series.filter(p=>p.iso<iso).pop();
+  const wn = $('#weightnote');
+  if(d.weight!=null && prev){ const diff = d.weight-prev.w; wn.textContent = `${diff<0?'↓':diff>0?'↑':'='} ${r1(Math.abs(diff))} vs last`; wn.className = diff<0?'down':''; }
+  else { wn.textContent = d.weight!=null ? 'logged ✓' : ''; wn.className=''; }
 
-  drawChart(series, avg);
+  // water
+  $('#glasses').innerHTML = Array.from({length:Math.max(G, d.water)}, (_,i)=>`<button class="glass ${i<d.water?'full':''}" data-g="${i+1}" aria-label="glass ${i+1}"><span>${i<d.water?'':'💧'}</span></button>`).join('');
+  $$('#glasses .glass').forEach(b=> b.onclick = ()=>{ const n=+b.dataset.g; d.water = (d.water===n) ? n-1 : n; save(); render(); });
+  $('#waterchip').textContent = `${d.water} / ${G}`;
+  $('#waternote').textContent = d.water>=G ? 'hydrated ✓' : `tap a glass each time you finish one`;
 
-  $('#tablewrap').innerHTML = series.length ? `<table id="wtable">
-    <tr><th>Date</th><th>Weight</th><th>7-day avg</th></tr>
-    ${series.map((pt,i)=>`<tr><td>${niceDate(pt.iso)}</td><td>${r1(pt.w)}</td><td>${r1(avg[i].w)}</td></tr>`).join('')}
-  </table>` : '<div class="small">no weigh-ins yet</div>';
+  // food
+  $('#foodchip').textContent = d.food.length ? `${d.food.length} ${d.food.length===1?'entry':'entries'}` : '';
+  $('#foodlist').innerHTML = d.food.map((f,i)=>`<div class="fitem"><span class="t">${esc(f.t)}</span><span class="txt">${esc(f.text)}</span><button class="rm" data-i="${i}" aria-label="remove">✕</button></div>`).join('');
+  $$('#foodlist .rm').forEach(b=> b.onclick = ()=>{ d.food.splice(+b.dataset.i,1); save(); render(); });
 
-  // star strip: last 14 days
-  const cells = [];
-  for(let i=13;i>=0;i--){
-    const iso = addDays(todayISO(),-i);
-    const won = state.days[iso] && isStar(state.days[iso]);
-    const d = dateOf(iso);
-    cells.push(`<div class="sday ${won?'won':''}"><div class="s">⭐</div><small>${d.getMonth()+1}/${d.getDate()}</small></div>`);
-  }
+  // how I felt
+  $$('.pips').forEach(p => p.querySelectorAll('button').forEach(b => b.classList.toggle('on', d[p.dataset.k]===+b.dataset.v)));
+  if(document.activeElement !== $('#noteinput')) $('#noteinput').value = d.note || '';
+
+  // tiles + chart + strip
+  const latest = series[series.length-1], first = series[0];
+  const change = latest && first ? latest.w-first.w : 0;
+  const stars = starDates().length, sk = streak();
+  const weekAgo = addDays(todayISO(),-6);
+  const thisWeek = starDates().filter(x=>x>=weekAgo).length;
+  $('#tiles').innerHTML = [
+    {label:'Current', val: latest?`${r1(latest.w)}<small> lbs</small>`:'—', sub: series.length>1?`${change<=0?'↓':'↑'} ${r1(Math.abs(change))} since first weigh-in`:'weigh in to start', good: change<0&&series.length>1},
+    {label:'Stars', val:`${stars} ⭐`, sub:`${thisWeek} of last 7 days`},
+    {label:'Streak', val:`${sk}<small> days</small>`, sub: sk>=3?'🔥 keep rolling':'three in a row lights a fire'}
+  ].map(t=>`<div class="tile"><div class="label">${t.label}</div><div class="val">${t.val}</div><div class="sub ${t.good?'good':''}">${t.sub}</div></div>`).join('');
+  drawChart(series, rolling7(series));
+  const cells=[]; for(let i=13;i>=0;i--){ const x=addDays(todayISO(),-i); const dd=dateOf(x); cells.push(`<div class="sday ${isStar(state.days[x])?'won':''}"><div class="s">⭐</div><small>${dd.getMonth()+1}/${dd.getDate()}</small></div>`); }
   $('#starstrip').innerHTML = cells.join('');
-  $('#starcount').textContent = `${stars} total · ${streak()}-day streak`;
 }
-$('#toggletable').onclick = ()=>{
-  const w = $('#tablewrap');
-  w.hidden = !w.hidden;
-  $('#chartwrap').style.display = w.hidden ? '' : 'none';
-  $('#toggletable').textContent = w.hidden ? 'table view' : 'chart view';
-};
+$('#saveweight').onclick = ()=>{ const v=parseFloat($('#weightinput').value); day(viewDate).weight = isNaN(v)?null:v; save(); render(); };
+$('#weightinput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#saveweight').click(); });
+$('#prevday').onclick = ()=>{ viewDate=addDays(viewDate,-1); render(); };
+$('#nextday').onclick = ()=>{ if(viewDate<todayISO()){ viewDate=addDays(viewDate,1); render(); } };
 
-let chartPts = [];
-function drawChart(series, avg){
-  const svg = $('#chart');
-  const W=640, H=300, ml=46, mr=16, mt=14, mb=30;
-  const x0 = series.length ? series[0].iso : todayISO();
-  const x1raw = series.length ? series[series.length-1].iso : todayISO();
-  const x1 = daysBetween(x0,x1raw) < 13 ? addDays(x0,13) : x1raw;
-  const span = Math.max(daysBetween(x0,x1),1);
-  const X = iso => ml + (W-ml-mr) * daysBetween(x0,iso)/span;
-  const ws = series.map(p=>p.w);
-  let ymin = ws.length? Math.min(...ws)-2 : 150, ymax = ws.length? Math.max(...ws)+2 : 180;
-  if(ymax-ymin < 6){ const mid=(ymax+ymin)/2; ymin=mid-3; ymax=mid+3; }
-  const Y = w => mt + (H-mt-mb) * (ymax-w)/(ymax-ymin);
-  let el = '';
-  const step = (ymax-ymin)>16 ? 5 : 2;
-  for(let g=Math.ceil(ymin/step)*step; g<=ymax; g+=step){
-    el += `<line x1="${ml}" y1="${Y(g)}" x2="${W-mr}" y2="${Y(g)}" stroke="var(--chart-grid)" stroke-width="1"/>`;
-    el += `<text x="${ml-8}" y="${Y(g)+4}" text-anchor="end" font-size="11" fill="var(--chart-muted)">${g}</text>`;
-  }
-  const tickEvery = span > 45 ? 14 : 7;
-  for(let i=0;i<=span;i+=tickEvery){
-    const iso = addDays(x0,i); const d = dateOf(iso);
-    el += `<text x="${X(iso)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--chart-muted)">${d.getMonth()+1}/${d.getDate()}</text>`;
-  }
-  el += `<line x1="${ml}" y1="${H-mb}" x2="${W-mr}" y2="${H-mb}" stroke="var(--chart-axis)" stroke-width="1"/>`;
-  if(avg.length>1){
-    el += `<polyline fill="none" stroke="var(--series-avg)" stroke-width="2" stroke-linejoin="round" points="${avg.map(p=>X(p.iso)+','+Y(p.w)).join(' ')}"/>`;
-  }
-  if(series.length>1){
-    el += `<polyline fill="none" stroke="var(--series-weight)" stroke-width="2" stroke-linejoin="round" points="${series.map(p=>X(p.iso)+','+Y(p.w)).join(' ')}"/>`;
-  }
-  chartPts = series.map(p=>({iso:p.iso, w:p.w, x:X(p.iso), y:Y(p.w)}));
-  for(const p of chartPts){
-    el += `<circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--series-weight)" stroke="var(--card)" stroke-width="2"/>`;
-  }
-  if(chartPts.length){
-    const lp = chartPts[chartPts.length-1];
-    el += `<text x="${lp.x}" y="${lp.y-10}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">${r1(lp.w)}</text>`;
-  }
-  if(!series.length){
-    el += `<text x="${(ml+W-mr)/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="var(--chart-muted)">weigh in on the Today tab and your line starts here</text>`;
-  }
-  el += `<line id="crosshair" y1="${mt}" y2="${H-mb}" stroke="var(--chart-axis)" stroke-width="1" opacity="0"/>`;
-  svg.innerHTML = el;
+function addFood(text){
+  const t = (text||'').trim(); if(!t) return;
+  day(viewDate).food.push({t: nowTime(), text: t});
+  save(); render();
 }
-(function chartHover(){
-  const svg = $('#chart'), tip = $('#tooltip');
-  function onmove(ev){
+$('#addfood').onclick = ()=>{ addFood($('#foodinput').value); $('#foodinput').value=''; };
+$('#foodinput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ addFood($('#foodinput').value); $('#foodinput').value=''; } });
+
+/* ───────── how I felt ───────── */
+$$('.pips').forEach(p => p.querySelectorAll('button').forEach(b => b.onclick = ()=>{
+  const d = day(viewDate), k = p.dataset.k, v = +b.dataset.v;
+  d[k] = (d[k]===v) ? null : v;   // tap again to clear
+  save(); render();
+}));
+function saveNote(){ day(viewDate).note = $('#noteinput').value.trim(); save(); }
+$('#noteinput').addEventListener('change', saveNote);
+$('#noteinput').addEventListener('blur', saveNote);
+
+/* ───────── voice (same engine as Money Garden's mic) ───────── */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+/* mode 'lines': each phrase → onFinal (food log). mode 'append': phrases pile into the input (note). */
+function wireMic(btn, input, hint, idleHint, listenHint, mode, onFinal){
+  let recog=null, wantListening=false;
+  const setUI = on => { btn.classList.toggle('listening',on); if(hint) hint.textContent = on?listenHint:idleHint; };
+  const start = ()=>{
+    recog = new SR();
+    recog.lang = navigator.language || 'en-US';
+    recog.interimResults = true; recog.continuous = true;
+    let base = mode==='append' ? input.value.trim() : '';
+    recog.onresult = ev => {
+      let interim='';
+      for(let i=ev.resultIndex;i<ev.results.length;i++){
+        const r=ev.results[i];
+        if(r.isFinal){
+          const t=r[0].transcript.trim(); if(!t) continue;
+          if(mode==='lines') onFinal(t); else { base=(base+' '+t).trim(); onFinal(base); }
+        } else interim += r[0].transcript;
+      }
+      input.value = mode==='lines' ? interim.trim() : (base+' '+interim.trim()).trim();
+    };
+    recog.onend = ()=>{
+      if(wantListening){ try{ recog.start(); return; }catch{ setTimeout(()=>{ if(wantListening) start(); },300); return; } }
+      if(mode==='lines') input.value=''; setUI(false);
+    };
+    recog.onerror = ev => {
+      if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){ wantListening=false; setUI(false); showToast('Mic permission needed — or tap the 🎙️ on your keyboard'); }
+    };
+    try{ recog.start(); setUI(true); }catch{ wantListening=false; setUI(false); showToast('Mic couldn\'t start — use your keyboard 🎙️'); }
+  };
+  btn.addEventListener('click', ()=>{
+    if(!SR){ input.focus(); showToast('No in-app mic here — tap the 🎙️ on your keyboard, it types for you'); return; }
+    if(wantListening){ wantListening=false; setUI(false); try{ recog.stop(); }catch{} return; }
+    wantListening=true; start();
+  });
+}
+wireMic($('#micBtn'), $('#foodinput'), $('#foodhint'),
+  'tap the mic and just say it — each thing you mention becomes a line',
+  'listening… tap the mic again when you\'re done', 'lines', addFood);
+wireMic($('#noteMic'), $('#noteinput'), $('#notehint'),
+  'saves as you go', 'listening… tap again to stop', 'append', txt => { day(viewDate).note = txt; save(); });
+
+/* ───────── chart ───────── */
+let chartPts=[];
+function drawChart(series, avg){
+  const svg=$('#chart'); const W=640,H=260,ml=46,mr=16,mt=14,mb=28;
+  const x0 = series.length?series[0].iso:todayISO();
+  const x1raw = series.length?series[series.length-1].iso:todayISO();
+  const x1 = daysBetween(x0,x1raw)<13 ? addDays(x0,13) : x1raw;
+  const span=Math.max(daysBetween(x0,x1),1);
+  const X = iso => ml+(W-ml-mr)*daysBetween(x0,iso)/span;
+  const ws=series.map(p=>p.w);
+  let ymin=ws.length?Math.min(...ws)-2:150, ymax=ws.length?Math.max(...ws)+2:180;
+  if(ymax-ymin<6){ const mid=(ymax+ymin)/2; ymin=mid-3; ymax=mid+3; }
+  const Y = w => mt+(H-mt-mb)*(ymax-w)/(ymax-ymin);
+  let el='';
+  const step=(ymax-ymin)>16?5:2;
+  for(let g=Math.ceil(ymin/step)*step; g<=ymax; g+=step){ el+=`<line x1="${ml}" y1="${Y(g)}" x2="${W-mr}" y2="${Y(g)}" stroke="var(--chart-grid)"/><text x="${ml-8}" y="${Y(g)+4}" text-anchor="end" font-size="11" fill="var(--chart-muted)">${g}</text>`; }
+  const tick = span>45?14:7;
+  for(let i=0;i<=span;i+=tick){ const iso=addDays(x0,i), dd=dateOf(iso); el+=`<text x="${X(iso)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--chart-muted)">${dd.getMonth()+1}/${dd.getDate()}</text>`; }
+  el+=`<line x1="${ml}" y1="${H-mb}" x2="${W-mr}" y2="${H-mb}" stroke="var(--chart-axis)"/>`;
+  if(avg.length>1) el+=`<polyline fill="none" stroke="var(--series-avg)" stroke-width="2" stroke-linejoin="round" points="${avg.map(p=>X(p.iso)+','+Y(p.w)).join(' ')}"/>`;
+  if(series.length>1) el+=`<polyline fill="none" stroke="var(--series-weight)" stroke-width="2" stroke-linejoin="round" points="${series.map(p=>X(p.iso)+','+Y(p.w)).join(' ')}"/>`;
+  chartPts = series.map(p=>({iso:p.iso,w:p.w,x:X(p.iso),y:Y(p.w)}));
+  for(const p of chartPts) el+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--series-weight)" stroke="var(--card)" stroke-width="2"/>`;
+  if(chartPts.length){ const lp=chartPts[chartPts.length-1]; el+=`<text x="${lp.x}" y="${lp.y-10}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">${r1(lp.w)}</text>`; }
+  if(!series.length) el+=`<text x="${(ml+W-mr)/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="var(--chart-muted)">your first weigh-in starts the line</text>`;
+  el+=`<line id="crosshair" y1="${mt}" y2="${H-mb}" stroke="var(--chart-axis)" opacity="0"/>`;
+  svg.innerHTML=el;
+}
+(function hover(){
+  const svg=$('#chart'), tip=$('#tooltip');
+  svg.addEventListener('mousemove', ev=>{
     if(!chartPts.length) return;
-    const rect = svg.getBoundingClientRect();
-    const px = (ev.clientX - rect.left) * 640/rect.width;
-    let best=null, bd=1e9;
-    for(const p of chartPts){ const d=Math.abs(p.x-px); if(d<bd){bd=d; best=p;} }
-    if(!best || bd>40){ tip.style.display='none'; $('#crosshair')?.setAttribute('opacity',0); return; }
-    const avg = rolling7(weightSeries()).find(a=>a.iso===best.iso);
-    tip.innerHTML = `<b>${niceDate(best.iso)}</b><br>weight ${r1(best.w)} · 7-day avg ${avg?r1(avg.w):'—'}`;
-    tip.style.display='block';
-    const wrap = $('#chartwrap').getBoundingClientRect();
-    let lx = (best.x*rect.width/640) + 12;
-    if(lx + 150 > wrap.width) lx -= 165;
-    tip.style.left = lx+'px';
-    tip.style.top = (best.y*rect.height/300 - 10)+'px';
-    const ch = $('#crosshair');
-    if(ch){ ch.setAttribute('x1',best.x); ch.setAttribute('x2',best.x); ch.setAttribute('opacity',0.6); }
-  }
-  svg.addEventListener('mousemove', onmove);
+    const rect=svg.getBoundingClientRect(); const px=(ev.clientX-rect.left)*640/rect.width;
+    let best=null,bd=1e9; for(const p of chartPts){ const d=Math.abs(p.x-px); if(d<bd){bd=d;best=p;} }
+    if(!best||bd>40){ tip.style.display='none'; return; }
+    const a=rolling7(weightSeries()).find(q=>q.iso===best.iso);
+    tip.innerHTML=`<b>${niceDate(best.iso)}</b><br>${r1(best.w)} · avg ${a?r1(a.w):'—'}`; tip.style.display='block';
+    const wrap=$('#chartwrap').getBoundingClientRect(); let lx=best.x*rect.width/640+12; if(lx+140>wrap.width) lx-=155;
+    tip.style.left=lx+'px'; tip.style.top=(best.y*rect.height/260-10)+'px';
+    const ch=$('#crosshair'); ch.setAttribute('x1',best.x); ch.setAttribute('x2',best.x); ch.setAttribute('opacity',.6);
+  });
   svg.addEventListener('mouseleave', ()=>{ tip.style.display='none'; $('#crosshair')?.setAttribute('opacity',0); });
 })();
 
-/* ───────────────────────── render: library ───────────────────────── */
-function renderLibrary(){
-  const byGroup = GROUPS.map(([g,label])=>{
-    const items = state.components.filter(c=>c.groups.includes(g));
-    if(!items.length) return '';
-    return `<div class="libgroup"><h3>${label}</h3>` + items.map(c=>`
-      <div class="librow">
-        <div class="lname">${c.name} <small>· ${c.serving}</small></div>
-        <div class="lmac">${c.cal} cal · ${c.p}p · ${c.f}f · ${c.c}c · ${c.fib}fib${c.veg?` · ${c.veg}oz veg`:''}</div>
-        <button class="ed" data-edit="${c.id}" aria-label="edit">✎</button>
-        <button class="del" data-del="${c.id}" aria-label="delete">✕</button>
-      </div>`).join('') + `</div>`;
-  }).join('');
-  $('#liblist').innerHTML = byGroup;
-  $$('#liblist [data-edit]').forEach(b=> b.onclick = ()=> startEdit(b.dataset.edit));
-  $$('#liblist [data-del]').forEach(b=> b.onclick = ()=>{
-    const c = comp(b.dataset.del);
-    if(confirm(`Delete "${c.name}" from your library? Days that used it keep working, but it can't be added again.`)){
-      state.components = state.components.filter(x=>x.id!==b.dataset.del);
-      save(); render();
-    }
-  });
-  if(!$('#cf-groups').children.length){
-    $('#cf-groups').innerHTML = GROUPS.map(([g,label])=>`<label><input type="checkbox" value="${g}">${label}</label>`).join('');
-  }
-}
-function startEdit(id){
-  const c = comp(id); if(!c) return;
-  editingId = id;
-  $('#formtitle').textContent = `Edit: ${c.name}`;
-  $('#cf-name').value=c.name; $('#cf-serving').value=c.serving;
-  $('#cf-cal').value=c.cal; $('#cf-p').value=c.p; $('#cf-f').value=c.f;
-  $('#cf-c').value=c.c; $('#cf-fib').value=c.fib; $('#cf-veg').value=c.veg||'';
-  $$('#cf-groups input').forEach(i=> i.checked = c.groups.includes(i.value));
-  $('#cf-cancel').hidden = false;
-  $('#compform').scrollIntoView({behavior:'smooth', block:'center'});
-}
-$('#cf-cancel').onclick = ()=>{ editingId=null; clearForm(); };
-function clearForm(){
-  $('#formtitle').textContent = 'Add a component';
-  ['name','serving','cal','p','f','c','fib','veg'].forEach(k=> $('#cf-'+k).value='');
-  $$('#cf-groups input').forEach(i=> i.checked=false);
-  $('#cf-cancel').hidden = true;
-}
-$('#cf-save').onclick = ()=>{
-  const name = $('#cf-name').value.trim();
-  if(!name){ alert('Give it a name'); return; }
-  const groups = $$('#cf-groups input').filter(i=>i.checked).map(i=>i.value);
-  if(!groups.length){ alert('Pick at least one place it shows up'); return; }
-  const num = id => parseFloat($('#'+id).value)||0;
-  const data = { name, serving:$('#cf-serving').value.trim()||'1 serving',
-    cal:num('cf-cal'), p:num('cf-p'), f:num('cf-f'), c:num('cf-c'), fib:num('cf-fib'), veg:num('cf-veg'), groups };
-  if(editingId){ Object.assign(comp(editingId), data); }
-  else {
-    const id = 'c'+Date.now().toString(36);
-    state.components.push({id, ...data});
-  }
-  editingId=null; clearForm(); save(); render();
+/* ───────── settings + backup ───────── */
+$('#gearBtn').onclick = ()=>{ const p=$('#settings'); p.hidden=!p.hidden; if(!p.hidden) $('#s-water').value=state.settings.waterGoal; };
+$('#s-water').addEventListener('input', ()=>{ const v=parseInt($('#s-water').value); if(v>0){ state.settings.waterGoal=v; save(); render(); } });
+$('#exportbtn').onclick = ()=>{ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`star-day-backup-${todayISO()}.json`; a.click(); URL.revokeObjectURL(a.href); };
+$('#importfile').onchange = ev=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ const s=JSON.parse(rd.result); if(!s.days) throw 0; if(confirm('Replace everything in the app with this backup?')){ state = (s.v===3)?s:migrateOld(s); save(); render(); } }catch{ alert('That file doesn\'t look like a Star Day backup.'); } };
+  rd.readAsText(f); ev.target.value='';
 };
 
-/* ───────────────────────── backup ───────────────────────── */
-$('#exportbtn').onclick = ()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `star-day-backup-${todayISO()}.json`;
-  a.click(); URL.revokeObjectURL(a.href);
-};
-$('#importfile').onchange = (ev)=>{
-  const f = ev.target.files[0]; if(!f) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try {
-      const s = JSON.parse(reader.result);
-      if(!s.components || !s.days) throw new Error('not a Star Day backup');
-      if(confirm('Replace everything in the app with this backup?')){
-        localStorage.setItem(KEY, JSON.stringify(s));
-        state = load(); save(); render();
-      }
-    } catch(e){ alert('That file doesn\'t look like a Star Day backup.'); }
-  };
-  reader.readAsText(f);
-  ev.target.value = '';
-};
-
-/* ───────────────────────── master render ───────────────────────── */
-function render(){
-  const t = activeTab();
-  if(t==='today') renderToday();
-  if(t==='progress') renderProgress();
-  if(t==='library') renderLibrary();
-}
 render();
 </script>
 <script>
