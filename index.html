@@ -125,6 +125,12 @@
   .pips { display: flex; gap: 6px; flex-wrap: wrap; }
   .pips button { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 11px; font-size: 15px; color: var(--ink); }
   .pips button.on { background: var(--accent-soft); border-color: var(--accent); }
+  /* mind/body rows never wrap: pips share the line and shrink text if needed */
+  .feelrow.oneline { flex-wrap: nowrap; gap: 6px; }
+  .feelrow.oneline .fl { flex: none; width: 48px; }
+  .feelrow.oneline .pips { flex: 1; flex-wrap: nowrap; min-width: 0; gap: 5px; }
+  .feelrow.oneline .pips button { flex: 1; min-width: 0; padding: 6px 2px; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  @media (max-width: 400px) { .feelrow.oneline .pips button { font-size: 11.5px; } }
   .miclite { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); font-size: 17px; flex: none; }
   .miclite.listening { background: var(--pink); border-color: var(--pink); }
   #noteinput { flex: 1; min-width: 0; }
@@ -224,10 +230,10 @@
 
   <div class="card">
     <h2>🧠 Mind &amp; body <span class="chip">one per row = ✓</span></h2>
-    <div class="feelrow"><span class="fl">mind</span><div class="pips multi" data-k="mind">
-      <button data-v="journal">📓 journaled</button><button data-v="affirm">💬 affirmations</button><button data-v="gratitude">🙏 gratitude</button></div></div>
-    <div class="feelrow"><span class="fl">body</span><div class="pips multi" data-k="body">
-      <button data-v="meditate">🧘 meditated</button><button data-v="yoga">🕉️ yoga</button><button data-v="stretch">🤸 stretched</button></div></div>
+    <div class="feelrow oneline"><span class="fl">mind</span><div class="pips multi" data-k="mind">
+      <button data-v="journal">📓 journal</button><button data-v="affirm">💬 affirm</button><button data-v="gratitude">🙏 gratitude</button></div></div>
+    <div class="feelrow oneline"><span class="fl">body</span><div class="pips multi" data-k="body">
+      <button data-v="meditate">🧘 meditate</button><button data-v="yoga">🕉️ yoga</button><button data-v="stretch">🤸 stretch</button></div></div>
   </div>
 
   <div class="card">
@@ -238,8 +244,8 @@
       <button data-v="1">🪫 low</button><button data-v="2">🔋 ok</button><button data-v="3">⚡ high</button></div></div>
     <div class="feelrow"><span class="fl">sleep</span><div class="pips" data-k="sleep">
       <button data-v="1">😴 rough</button><button data-v="2">🙂 ok</button><button data-v="3">✨ great</button></div></div>
-    <div class="feelrow"><span class="fl">moved</span><div class="pips" data-k="move">
-      <button data-v="1">🛋️ rest</button><button data-v="2">🚶 walked</button><button data-v="3">💪 worked out</button></div></div>
+    <div class="feelrow oneline"><span class="fl">moved</span><div class="pips" data-k="move">
+      <button data-v="1">🛋️ rest</button><button data-v="2">🚶 walked</button><button data-v="3">💪 workout</button></div></div>
     <div class="foodrow" style="margin-top:10px">
       <button id="noteMic" class="miclite" aria-label="Talk">🎙️</button>
       <input type="text" id="noteinput" placeholder="anything else — cravings, stress, a walk, your cycle…" autocomplete="off">
